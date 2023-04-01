@@ -11,16 +11,17 @@ datasource db {
 }
 
 model Post {
-  id        Int      @id @default(autoincrement())
-  createdAt DateTime @default(now())
-  title     String   @db.VarChar(255)
-  content   String?
-  like      Int      @default(0)
-  published Boolean  @default(false)
-  pointer   Prof     @relation(fields: [pointerId], references: [id])
-  pointerId Int
-  author    User     @relation(fields: [authorId], references: [id])
-  authorId  Int
+  id         Int      @id @default(autoincrement())
+  createdAt  DateTime @default(now())
+  content    String?
+  likes      Int      @default(0)
+  likedBy    User[]
+  dislikedBy User[]   @relation("dislikedBy")
+  published  Boolean  @default(false)
+  pointer    Prof     @relation("pointer", fields: [pointerId], references: [id])
+  pointerId  Int
+  author     User     @relation("author", fields: [authorId], references: [id])
+  authorId   Int
 }
 
 model Profile {
@@ -29,22 +30,24 @@ model Profile {
   bio    String?
   badges String[] @default([])
   coins  Int      @default(0)
-  user   User     @relation(fields: [userId], references: [id])
+  user   User     @relation("profile", fields: [userId], references: [id])
   userId Int      @unique
 }
 
 model User {
-  id      Int      @id @default(autoincrement())
-  name    String?  @unique
-  posts   Post[]
-  profile Profile?
+  id       Int      @id @default(autoincrement())
+  name     String?  @unique
+  posts    Post[]   @relation("author")
+  likes    Post[]
+  dislikes Post[]   @relation("dislikedBy")
+  profile  Profile? @relation("profile")
 }
 
 model Prof {
   id       Int     @id @default(autoincrement())
-  name     String?
+  name     String? @unique
   subject  String?
   color    String?
   absences Int     @default(0)
-  Post     Post[]
+  posts    Post[]  @relation("pointer")
 }
