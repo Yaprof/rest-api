@@ -13,26 +13,38 @@ datasource db {
 model Post {
   id        Int      @id @default(autoincrement())
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
   title     String   @db.VarChar(255)
   content   String?
+  like      Int      @default(0)
   published Boolean  @default(false)
+  pointer   Prof     @relation(fields: [pointerId], references: [id])
+  pointerId Int
   author    User     @relation(fields: [authorId], references: [id])
   authorId  Int
 }
 
 model Profile {
-  id     Int       @id @default(autoincrement())
+  id     Int      @id @default(autoincrement())
+  pp     String?
   bio    String?
-  badges String[]  @default([])
-  user   User      @relation(fields: [userId], references: [id])
-  userId Int       @unique
+  badges String[] @default([])
+  coins  Int      @default(0)
+  user   User     @relation(fields: [userId], references: [id])
+  userId Int      @unique
 }
 
 model User {
   id      Int      @id @default(autoincrement())
-  email   String   @unique
-  name    String?
+  name    String?  @unique
   posts   Post[]
   profile Profile?
+}
+
+model Prof {
+  id       Int     @id @default(autoincrement())
+  name     String?
+  subject  String?
+  color    String?
+  absences Int     @default(0)
+  Post     Post[]
 }

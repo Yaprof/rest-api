@@ -1,13 +1,21 @@
-import express from 'express'
-import { PrismaClient } from '@prisma/client'
+const express = require('express')
+const { PrismaClient } = require('@prisma/client')
+var cors = require('cors')
 
 const prisma = new PrismaClient()
 const app = express()
 
+app.use(cors())
+
 app.get('/feed', async (req, res) => {
-  const posts = await prisma.post.findMany({
-    where: { published: true },
-    include: { author: true },
+    const posts = await prisma.post.findMany({
+        where: { published: true },
+        include: {
+            author: {
+                include: { profile: true },
+            },
+            pointer: true
+        },
   })
   res.json(posts)
 })
@@ -44,4 +52,67 @@ app.delete('/user/:id', async (req, res) => {
   res.json(user)
 })
 
-const server = app.listen(3000)
+app.post('/user/create', async (req, res) => {
+    let user = await prisma.user.findMany({
+        where: {
+            name: req.query.name
+        },
+        include: {
+            profile: true,
+        },
+    })
+    if (user.length == 0) {
+        user = await prisma.user.create({
+            data: {
+                name: req.query.name,
+                profile: {
+                    create: {
+                        pp: req.query.pp,
+                    },
+                }
+            }
+        })
+    } else {
+        await prisma.user.update({
+            where: {
+                name: req.query.name
+            },
+            data: {
+                profile: {
+                    update: {
+                        pp: req.query.pp,
+                    },
+                }
+            },
+            include: {
+                profile: true,
+            },
+        })
+        user = await prisma.user.findMany({
+            where: {
+                name: req.query.name
+            },
+            include: {
+                profile: true,
+            },
+        })
+    }
+    res.json(user)
+})
+
+app.get('/user/:id', async (req, res) => {
+    if (req.params?.id == 'undefined') return
+    const user = await prisma.user.findMany({
+        where: {
+            id: parseInt(req.params.id),
+        },
+        include: {
+            profile: true,
+        },
+    })
+    console.log(user)
+    res.json(user)
+})
+
+
+const server = app.listen(8080)
