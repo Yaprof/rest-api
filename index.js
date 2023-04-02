@@ -138,7 +138,7 @@ app.delete('/user/:id', async (req, res) => {
 app.post('/user/create', jsonParser, async (req, res) => {
     let user = await prisma.user.findMany({
         where: {
-            name: req.query.name
+            name: req.body.name
         },
         include: {
             profile: true,
@@ -147,10 +147,12 @@ app.post('/user/create', jsonParser, async (req, res) => {
     if (user.length == 0) {
         user = await prisma.user.create({
             data: {
-                name: req.query.name,
+                name: req.body.name,
+                class: req.body.class,
+                etablissement: req.body.etab,
                 profile: {
                     create: {
-                        pp: req.query.pp,
+                        pp: req.body.pp,
                     },
                 }
             }
@@ -158,12 +160,15 @@ app.post('/user/create', jsonParser, async (req, res) => {
     } else {
         await prisma.user.update({
             where: {
-                name: req.query.name
+                name: req.body.name
             },
             data: {
+                name: req.body.name,
+                class: req.body.class,
+                etablissement: req.body.etab,
                 profile: {
                     update: {
-                        pp: req.query.pp,
+                        pp: req.body.pp,
                     },
                 }
             },
@@ -173,7 +178,7 @@ app.post('/user/create', jsonParser, async (req, res) => {
         })
         user = await prisma.user.findMany({
             where: {
-                name: req.query.name
+                name: req.body.name
             },
             include: {
                 profile: true,

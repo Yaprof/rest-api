@@ -35,12 +35,14 @@ model Profile {
 }
 
 model User {
-  id       Int      @id @default(autoincrement())
-  name     String?  @unique
-  posts    Post[]   @relation("author")
-  likes    Post[]
-  dislikes Post[]   @relation("dislikedBy")
-  profile  Profile? @relation("profile")
+  id            Int      @id @default(autoincrement())
+  name          String?  @unique
+  class         String?
+  establishment String?
+  posts         Post[]   @relation("author")
+  likes         Post[]
+  dislikes      Post[]   @relation("dislikedBy")
+  profile       Profile? @relation("profile")
 }
 
 model Prof {
