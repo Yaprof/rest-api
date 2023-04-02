@@ -149,7 +149,7 @@ app.post('/user/create', jsonParser, async (req, res) => {
             data: {
                 name: req.body.name,
                 class: req.body.class,
-                etablissement: req.body.etab,
+                establishment: req.body.etab,
                 profile: {
                     create: {
                         pp: req.body.pp,
@@ -165,7 +165,7 @@ app.post('/user/create', jsonParser, async (req, res) => {
             data: {
                 name: req.body.name,
                 class: req.body.class,
-                etablissement: req.body.etab,
+                establishment: req.body.etab,
                 profile: {
                     update: {
                         pp: req.body.pp,
