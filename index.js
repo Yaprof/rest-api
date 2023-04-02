@@ -176,15 +176,15 @@ app.post('/user/create', jsonParser, async (req, res) => {
                 profile: true,
             },
         })
-        user = await prisma.user.findMany({
-            where: {
-                name: req.body.name
-            },
-            include: {
-                profile: true,
-            },
-        })
     }
+    user = await prisma.user.findMany({
+        where: {
+            name: req.body.name
+        },
+        include: {
+            profile: true,
+        },
+    })
     res.json(user)
 })
 
