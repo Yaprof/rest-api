@@ -64,6 +64,18 @@ app.post('/post', jsonParser, async (req, res) => {
     res.json(post)
 })
 
+app.delete('/post/:id', async (req, res) => {
+    const { id } = req.params
+    if (!id) return false
+    const post = await prisma.post.delete({
+        where: {
+        id: parseInt(id)
+        },
+    })
+    res.json(post)
+})
+
+
 app.post('/post/:id/like', jsonParser, async (req, res) => {
     let post = await prisma.post.findUnique({
         where: { id: parseInt(req.params.id) },
@@ -201,7 +213,7 @@ app.post('/user/create', jsonParser, async (req, res) => {
 
 app.get('/user/:id', jsonParser, async (req, res) => {
     if (req.params?.id == 'undefined') return
-    const user = await prisma.user.findMany({
+    const user = await prisma.user.findUnique({
         where: {
             id: parseInt(req.params.id),
         },
