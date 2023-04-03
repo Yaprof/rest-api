@@ -10,10 +10,20 @@ var jsonParser = bodyParser.json()
 
 app.use(cors({origin:true,credentials: true}));
 
-app.get('/feed', jsonParser, async (req, res) => {
+app.get('/feed/:userId', jsonParser, async (req, res) => {
+    const user = await prisma.user.findUnique({
+        where: { id: parseInt(req.params.userId) },
+        include: {
+            profile: true,
+        }
+    })
+    if (!user) return res.json({ error: 'User not found' })
     const posts = await prisma.post.findMany({
         orderBy: {
             createdAt: 'desc'
+        },
+        where: {
+            establishment: user.establishment,
         },
         include: {
             author: {
@@ -23,19 +33,20 @@ app.get('/feed', jsonParser, async (req, res) => {
             likedBy: true,
             dislikedBy: true
         },
-  })
+    })
   res.json(posts)
 })
 
 app.post('/post', jsonParser, async (req, res) => {
-    const { pointer, content, authorId } = req.body
-    if (!pointer || !content || !authorId) return res.json({ error: 'Missing parameters' })
+    const { pointer, content, user } = req.body
+    if (!pointer || !content || !user) return res.json({ error: 'Missing parameters' })
     let colors = ['#FF2D00', '#FF9500', '#FFCC00', '#4CD964', '#5AC8FA', '#007AFF', '#5856D6', '#FF2D55', '#8E8E93']
     const post = await prisma.post.create({
         data: {
             content: content,
             published: true,
-            author: { connect: { id: parseInt(authorId) } },
+            author: { connect: { id: parseInt(user.id) } },
+            establishment: user.establishment,
             pointer: {
                 connectOrCreate: {
                     where: {

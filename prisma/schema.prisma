@@ -11,17 +11,18 @@ datasource db {
 }
 
 model Post {
-  id         Int      @id @default(autoincrement())
-  createdAt  DateTime @default(now())
-  content    String?
-  likes      Int      @default(0)
-  likedBy    User[]
-  dislikedBy User[]   @relation("dislikedBy")
-  published  Boolean  @default(false)
-  pointer    Prof     @relation("pointer", fields: [pointerId], references: [id])
-  pointerId  Int
-  author     User     @relation("author", fields: [authorId], references: [id])
-  authorId   Int
+  id            Int      @id @default(autoincrement())
+  createdAt     DateTime @default(now())
+  content       String?
+  likes         Int      @default(0)
+  likedBy       User[]
+  dislikedBy    User[]   @relation("dislikedBy")
+  published     Boolean  @default(false)
+  pointer       Prof     @relation("pointer", fields: [pointerId], references: [id])
+  pointerId     Int
+  establishment String?
+  author        User     @relation("author", fields: [authorId], references: [id])
+  authorId      Int
 }
 
 model Profile {
@@ -38,6 +39,7 @@ model User {
   id            Int      @id @default(autoincrement())
   name          String?  @unique
   class         String?
+  role          Int      @default(0)
   establishment String?
   posts         Post[]   @relation("author")
   likes         Post[]
