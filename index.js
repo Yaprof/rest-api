@@ -153,8 +153,9 @@ app.delete('/user/:id', async (req, res) => {
     if (!id) return false
     const user = await prisma.user.delete({
         where: {
-        id: id
+            id: id
         },
+        rejectOnNotFound: false,
     }).catch(e => {return console.log(e) })
     res.json(user)
 })
