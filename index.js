@@ -241,6 +241,7 @@ app.get('/user/:id', jsonParser, async (req, res) => {
         },
         include: {
             profile: true,
+            posts: true,
         },
     }).catch(e => {return console.log(e) })
     console.log(user)
