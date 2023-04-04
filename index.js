@@ -159,7 +159,8 @@ app.delete('/user/:id', async (req, res) => {
 })
 
 app.post('/user/create', jsonParser, async (req, res) => {
-    if (!req.body.name || !req.body.class || !req.body.etab || !req.body.pp) return res.json({ error: 'Missing parameters' })
+    if (!req.body.name || !req.body.class || !req.body.etab || !req.body.pp || !req.body.role) return res.json({ error: 'Missing parameters' })
+    console.log(req.body.name + ' ' + req.body.class + ' ' + req.body.etab + ' ' + req.body.pp + ' ' + req.body.role)
     let user = await prisma.user.findMany({
         where: {
             name: req.body.name
@@ -174,6 +175,7 @@ app.post('/user/create', jsonParser, async (req, res) => {
                 name: req.body.name,
                 class: req.body.class,
                 establishment: req.body.etab,
+                role: req.body.role,
                 profile: {
                     create: {
                         pp: req.body.pp,
@@ -190,6 +192,7 @@ app.post('/user/create', jsonParser, async (req, res) => {
                 name: req.body.name,
                 class: req.body.class,
                 establishment: req.body.etab,
+                role: req.body.role,
                 profile: {
                     update: {
                         pp: req.body.pp,
