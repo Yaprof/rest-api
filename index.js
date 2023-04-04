@@ -2,7 +2,6 @@ const express = require('express')
 const { PrismaClient } = require('@prisma/client')
 var bodyParser = require('body-parser')
 var cors = require('cors')
-const { formatISO } = require('date-fns');
 
 const prisma = new PrismaClient()
 const app = express()
