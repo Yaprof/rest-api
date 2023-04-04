@@ -2,6 +2,7 @@ const express = require('express')
 const { PrismaClient } = require('@prisma/client')
 var bodyParser = require('body-parser')
 var cors = require('cors')
+const { formatISO } = require('date-fns');
 
 const prisma = new PrismaClient()
 const app = express()
@@ -12,14 +13,15 @@ var jsonParser = bodyParser.json({limit: '10mb', type: 'application/json'})
 app.use(cors({origin:true,credentials: true}));
 
 app.get('/feed/:userId', jsonParser, async (req, res) => {
+    let type = req.query.type
     const user = await prisma.user.findUnique({
-        where: { id: parseInt(req.params.userId) },
+        where: {id: parseInt(req.params.userId)},
         include: {
             profile: true,
         }
     })
     if (!user) return res.json({ error: 'User not found' })
-    const posts = await prisma.post.findMany({
+    let posts = await prisma.post.findMany({
         orderBy: {
             createdAt: 'desc'
         },
@@ -35,6 +37,23 @@ app.get('/feed/:userId', jsonParser, async (req, res) => {
             dislikedBy: true
         },
     })
+    function isDateInThisWeek(date) {
+        const todayObj = new Date();
+        const todayDate = todayObj.getDate();
+        const todayDay = todayObj.getDay();
+
+        // get first date of week
+        const firstDayOfWeek = new Date(todayObj.setDate(todayDate - todayDay));
+
+        // get last date of week
+        const lastDayOfWeek = new Date(firstDayOfWeek);
+        lastDayOfWeek.setDate(lastDayOfWeek.getDate() + 6);
+
+        // if date is equal or within the first and last dates of the week
+        return date >= firstDayOfWeek && date <= lastDayOfWeek;
+    }
+    if (type == "daily") posts = posts.filter(post => new Date(post.createdAt).getDay() == new Date().getDay())
+    if (type == "weekly") posts = posts.filter(post => isDateInThisWeek(new Date(post.createdAt)))
   res.json(posts)
 })
 
