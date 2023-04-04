@@ -192,7 +192,7 @@ app.post('/user/create', jsonParser, async (req, res) => {
                 establishment: req.body.etab,
                 role: req.body.role,
         }
-        if (!(user.profile.pp.startsWith('data:') && req.body.pp.startsWith('https://'))) updateData.profile = { pp: req.body.pp }
+        if (!(user.profile.pp.startsWith('data:') && req.body.pp.startsWith('https://'))) updateData.profile = { update: { pp: req.body.pp } }
         console.log(updateData)
         await prisma.user.update({
             where: {
