@@ -149,13 +149,14 @@ app.put('/publish/:id', jsonParser, async (req, res) => {
 })
 
 app.delete('/user/:id', async (req, res) => {
-  const { id } = req.params
-  const user = await prisma.user.delete({
-    where: {
-      id,
-    },
-  })
-  res.json(user)
+    const { id } = req.params
+    if (!id) return false
+    const user = await prisma.user.delete({
+        where: {
+        id: id
+        },
+    })
+    res.json(user)
 })
 
 app.post('/user/create', jsonParser, async (req, res) => {
