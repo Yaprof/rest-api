@@ -155,7 +155,7 @@ app.delete('/user/:id', async (req, res) => {
         where: {
         id: id
         },
-    })
+    }).catch(e => {return console.log(e) })
     res.json(user)
 })
 
@@ -169,7 +169,7 @@ app.post('/user/create', jsonParser, async (req, res) => {
         include: {
             profile: true,
         },
-    }).catch(e => console.log(e))
+    }).catch(e => {return console.log(e) })
     if (user.length == 0) {
         user = await prisma.user.create({
             data: {
@@ -183,7 +183,7 @@ app.post('/user/create', jsonParser, async (req, res) => {
                     },
                 }
             }
-        }).catch(e => console.log(e))
+        }).catch(e => {return console.log(e) })
     } else {
         await prisma.user.update({
             where: {
@@ -203,7 +203,7 @@ app.post('/user/create', jsonParser, async (req, res) => {
             include: {
                 profile: true,
             },
-        }).catch(e => console.log(e))
+        }).catch(e => {return console.log(e) })
     }
     user = await prisma.user.findMany({
         where: {
@@ -212,7 +212,7 @@ app.post('/user/create', jsonParser, async (req, res) => {
         include: {
             profile: true,
         },
-    }).catch(e => console.log(e))
+    }).catch(e => {return console.log(e) })
     res.json(user)
 })
 
@@ -225,7 +225,7 @@ app.get('/user/:id', jsonParser, async (req, res) => {
         include: {
             profile: true,
         },
-    })
+    }).catch(e => {return console.log(e) })
     console.log(user)
     res.json(user)
 })
