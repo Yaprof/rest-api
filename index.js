@@ -6,7 +6,8 @@ var cors = require('cors')
 const prisma = new PrismaClient()
 const app = express()
 
-var jsonParser = bodyParser.json()
+var jsonParser = bodyParser.json({limit: '10mb', type: 'application/json'})
+
 
 app.use(cors({origin:true,credentials: true}));
 
