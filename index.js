@@ -51,7 +51,7 @@ app.get('/feed/:userId', jsonParser, async (req, res) => {
         // if date is equal or within the first and last dates of the week
         return date >= firstDayOfWeek && date <= lastDayOfWeek;
     }
-    if (type == "daily") posts = posts.filter(post => new Date(post.createdAt).getDay() == new Date().getDay())
+    if (type == "daily") posts = posts.filter(post => post.createdAt.split('T')[0].replaceAll('-0', '-') == (new Date().getFullYear()+'-'+new Date().getDate()+'-'+(new Date().getMonth()+1)))
     if (type == "weekly") posts = posts.filter(post => isDateInThisWeek(new Date(post.createdAt)))
   res.json(posts)
 })
