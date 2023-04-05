@@ -8,7 +8,7 @@ moment.locale('fr')
 const prisma = new PrismaClient()
 const app = express()
 
-var jsonParser = bodyParser.json({limit: '10mb', type: 'application/json'})
+var jsonParser = bodyParser.json({limit: '50mb', type: 'application/json'})
 
 
 app.use(cors({origin:true,credentials: true}));
@@ -65,6 +65,18 @@ app.post('/post', jsonParser, async (req, res) => {
     if (date == 'tomorrow') date = moment().add(1, 'days');
     if (date == 'next_tomorrow') date = moment().add(2, 'days');
     if (date == 'next_next_tomorrow') date = moment().add(3, 'days');
+    let findProfPost = await prisma.prof.findUnique({
+        where: {
+            name: pointer.name,
+        },
+        include: {
+           posts: true
+       }
+    })
+    console.log(findProfPost)
+    let profPosts = findProfPost.posts.filter(post => moment(post.createdAt).date() == moment(date).date())
+    console.log(findProfPost.posts[0].createdAt, moment(date).date())
+    if (profPosts.length > 0) return res.json({ error: 'Post déjà existant' })
     const post = await prisma.post.create({
         data: {
             content: content,
