@@ -2,6 +2,8 @@ const express = require('express')
 const { PrismaClient } = require('@prisma/client')
 var bodyParser = require('body-parser')
 var cors = require('cors')
+const moment = require('moment')
+moment.locale('fr')
 
 const prisma = new PrismaClient()
 const app = express()
@@ -51,11 +53,14 @@ app.get('/feed/:userId', jsonParser, async (req, res) => {
         // if date is equal or within the first and last dates of the week
         return date >= firstDayOfWeek && date <= lastDayOfWeek;
     }
-    console.log((new Date(posts[0].createdAt).getFullYear()+'-'+new Date(posts[0].createdAt).getDate()+'-'+(new Date(posts[0].createdAt).getMonth()+1)))
-    console.log(new Date())
-    if (type == "daily") posts = posts.filter(post => (new Date(post.createdAt).getFullYear() + '-' + new Date(post.createdAt).getDate() + '-' + (new Date(post.createdAt).getMonth() + 1)) == (new Date().getFullYear() + '-' + new Date().getDate() + '-' + (new Date().getMonth() + 1)))
+    if (type == "daily"){ posts = posts.filter(post => {
+        let today = moment().toDate()
+        let dateCreated = moment(post.createdAt).toDate()
+        return today.getFullYear() == dateCreated.getFullYear() && today.getMonth() == dateCreated.getMonth() && today.getDate() == dateCreated.getDate()
+    })
+    }
     if (type == "weekly") posts = posts.filter(post => isDateInThisWeek(new Date(post.createdAt)))
-  res.json(posts)
+    res.json(posts)
 })
 
 app.post('/post', jsonParser, async (req, res) => {
