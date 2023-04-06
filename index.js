@@ -73,9 +73,7 @@ app.post('/post', jsonParser, async (req, res) => {
            posts: true
        }
     })
-    console.log(findProfPost)
     let profPosts = findProfPost.posts.filter(post => moment(post.createdAt).date() == moment(date).date())
-    console.log(findProfPost.posts[0].createdAt, moment(date).date())
     if (profPosts.length > 0) return res.json({ error: 'Post déjà existant' })
     const post = await prisma.post.create({
         data: {
