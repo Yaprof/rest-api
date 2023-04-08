@@ -1,10 +1,12 @@
 const { PrismaClient } = require('@prisma/client')
 const prisma = new PrismaClient()
+const moment = require('moment')
 
 exports.createPost = async function createPost(user, pointer, content, date) {
+    console.log(user.id, pointer, content, date)
     if (!pointer || !content || !user || !date) return { error: 'Arguments manquants' }
-    pointer = JSON.parse(pointer)
-    if (!pointer.name || !pointer.subject) return { error: 'Arguments manquants' }
+    if (!pointer.name || !pointer.subject) return { error: 'Prof incorrect' }
+    
 
     let colors = ['#FF2D00', '#FF9500', '#FFCC00', '#4CD964', '#5AC8FA', '#007AFF', '#5856D6', '#FF2D55', '#8E8E93']
     if (date == 'today') date = moment()
@@ -52,7 +54,7 @@ exports.createPost = async function createPost(user, pointer, content, date) {
 }
 
 exports.deletePost =  async function deletePost(user, id) {
-    if (!id || !user || isNaN(id)) return { error: 'Arguments manquants' }
+    if (!id || !user) return { error: 'Arguments manquants' }
     const post = await prisma.post.delete({
         where: {
             id: parseInt(id)
@@ -63,7 +65,7 @@ exports.deletePost =  async function deletePost(user, id) {
 }
 
 exports.likePost = async function likePost(user, id) {
-    if (!id || !user || isNaN(id)) return { error: 'Arguments manquants' }
+    if (!id || !user) return { error: 'Arguments manquants' }
     let post = await prisma.post.findUnique({
         where: { id: parseInt(id) },
         include: {
@@ -95,7 +97,7 @@ exports.likePost = async function likePost(user, id) {
 }
 
 exports.dislikePost = async function dislikePost(user, id) {
-    if (!id || !user || isNaN(id)) return { error: 'Arguments manquants' }
+    if (!id || !user) return { error: 'Arguments manquants' }
     let post = await prisma.post.findUnique({
         where: { id: parseInt(id) },
         include: {

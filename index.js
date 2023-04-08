@@ -6,9 +6,10 @@ const moment = require('moment')
 const jwt = require('jsonwebtoken');
 const dotenv = require('dotenv');
 
-const { getUser, createUser, getUserFeed, updateUser } = require('./functions/user')
+const { getUser, createUser, getUserFeed, updateUser, getUserByName } = require('./functions/user')
 const { getPost, createPost, deletePost, likePost, dislikePost } = require('./functions/post')
-const { generateToken, getInfos, LoginGenerateToken, getRecipients } = require('./functions/auth')
+const { generateToken, getInfos, getRecipients, getEntUrl } = require('./functions/auth')
+console.log(jwt.verify("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJodHRwczovLzAwNjAwMjBQLmluZGV4LWVkdWNhdGlvbi5uZXQvcHJvbm90ZS9lbGV2ZS5odG1sIiwidXNlcm5hbWUiOiJ6ZWJpbGFtb3VjaGUiLCJwYXNzd29yZCI6IkFsZXh4bGViZXN0MjAwNyMiLCJlbnQiOiJhdHJpdW1fc3VkIiwiaWF0IjoxNjgwOTYyNTY4fQ.d3YNxOVgjg0SRpsymLNI3PhA3hZebd3Pg9WlnF21lsM", process.env.JSON_WEB_TOKEN))
 
 const isTokenValid = require('./middleware/tokenValid').default
 console.log(isTokenValid)
@@ -28,38 +29,45 @@ app.use(urlencodedParser)
 
 app.get('/feed/:userId', isTokenValid, async (req, res) => {
     console.log(req.body)
-    let type = req.query.type
-    if (!req.params.userId || !type) return res.json({ error: 'Arguments manquants' })
+    if (!req.params.userId) return res.json({ error: 'Arguments manquants' })
     let user = await getUser(req.body.userId)
     if (!user) return res.json({ error: 'User introuvable' })
-    let posts = await getUserFeed(user, req.params.userId, type)
+    let posts = await getUserFeed(user, req.params.userId)
     res.json(posts)
 })
 
 app.post('/post', isTokenValid, async (req, res, next) => {
-    let { pointer, content, user, date } = req.body
-    console.log(req.body)
-    if (!pointer || !content || !user || !date) return res.json({ error: 'Arguments manquants' })
+    let { pointer, content, date } = req.body
+    console.log(pointer, content, date)
+    if (!pointer || !content || !date) return res.json({ error: 'Arguments manquants' })
+    let user = await getUserByName(jwt.verify(req.query.userInfos, process.env.JSON_WEB_TOKEN).name)
+    if (!user) return res.json({ error: 'User introuvable' })
     let post = await createPost(user, pointer, content, date)
     res.json(post)
 })
 
 app.delete('/post/:id', isTokenValid, async (req, res) => {
     const { id } = req.params
-    if (!id) return false
+    if (!id) return res.json({ error: 'Arguments manquants' })
+    let user = await getUserByName(jwt.verify(req.query.userInfos, process.env.JSON_WEB_TOKEN).name)
+    if (!user) return res.json({ error: 'User introuvable' })
     let post = await deletePost(user, id)
     res.json(post)
 })
 
 app.post('/post/:id/like', isTokenValid, async (req, res) => {
-    if (!req.params.id || !req.body.user) return res.json({ error: 'Arguments manquants' })
-    let post = await likePost(req.body.user, req.params.id)
+    if (!req.params.id) return res.json({ error: 'Arguments manquants' })
+    let user = await getUserByName(jwt.verify(req.query.userInfos, process.env.JSON_WEB_TOKEN).name)
+    if (!user) return res.json({ error: 'User introuvable' })
+    let post = await likePost(user, req.params.id)
     res.json(post)
 })
 
 app.post('/post/:id/dislike', isTokenValid, async (req, res) => {
-    if (!req.params.id || !req.body.user) return res.json({ error: 'Arguments manquants' })
-    let post = await dislikePost(req.body.user, req.params.id)
+    if (!req.params.id) return res.json({ error: 'Arguments manquants' })
+     let user = await getUserByName(jwt.verify(req.query.userInfos, process.env.JSON_WEB_TOKEN).name)
+    if (!user) return res.json({ error: 'User introuvable' })
+    let post = await dislikePost(user, req.params.id)
     res.json(post)
 })
 
@@ -69,9 +77,11 @@ app.post('/user/create', isTokenValid, async (req, res) => {
     res.json(user)
 })
 
-app.get('/user/:id', isTokenValid, async (req, res) => {
-    if (req.params?.id == 'undefined') return
-    let user = await getUser(req.params.id)
+app.get('/user', isTokenValid, async (req, res) => {
+    if (!req.query?.userInfos) return res.json({ error: 'Userinfos invalide' })
+    let userbyName = await getUserByName(jwt.verify(req.query.userInfos, process.env.JSON_WEB_TOKEN).name)
+    if (!userbyName) return res.json({ error: 'User introuvable' })
+    let user = await getUser(userbyName.id)
     res.json(user)
 })
 
@@ -90,20 +100,40 @@ app.post('/generatetoken', async (req, res) => {
     let userInfos = await getInfos(token.token)
     if (!userInfos) return res.json({ error: 'Impossible de récupérer les informations' })
     console.log('Token généré')
-    console.log(userInfos)
-    res.json({ token: jwt.sign(token.token, process.env.JSON_WEB_TOKEN), userInfos: jwt.sign(userInfos, process.env.JSON_WEB_TOKEN) })
+    let connectInfos = {
+        url: url,
+        name: userInfos.name,
+        username: username,
+        password: password,
+        ent: ent,
+    }
+    res.json({ token: jwt.sign(token.token, process.env.JSON_WEB_TOKEN), userInfos: jwt.sign(connectInfos, process.env.JSON_WEB_TOKEN) })
 })
 
-app.post('/logingeneratetoken', async (req, res) => {
-    let { url, username, password, ent } = req.body
-    console.log(url, username, password, ent)
-    if (!url || !username || !password || !ent) return res.json({ error: 'Arguments manquants' })
-    let token = await LoginGenerateToken(url, username, password, ent)
+app.post('/login', async (req, res) => {
+    let { username, password, ent_url } = req.body
+    if (!username || !password || !ent_url) return res.json({ error: 'Arguments manquants' })
+    let geturl = await getEntUrl(ent_url)
+    let url = geturl.url
+    ent = geturl.ent
+    if (!ent) return res.json({ error: 'Impossible de récupérer l\'url de l\'ENT' })
+    let token = await generateToken(url, username, password, ent)
     if (!token) return res.json({ error: 'Impossible de générer le token' })
-    let userInfos = await getInfos(token.token)
+    console.log('login token', token)
+    let userInfos = await getInfos(token)
     if (!userInfos) return res.json({ error: 'Impossible de récupérer les informations' })
-    await createUser(userInfos.name, userInfos.class, userInfos.etab, userInfos.pp, userInfos.role)
-    res.json({ token: jwt.sign(token.token, process.env.JSON_WEB_TOKEN), userInfos: jwt.sign(userInfos, process.env.JSON_WEB_TOKEN) })
+    let user = await createUser(userInfos.name, userInfos.class, userInfos.etab, userInfos.pp, userInfos.role)
+    console.log(user)
+    if (!user || user.error) return res.json({ error: 'Impossible de créer l\'utilisateur' })
+    console.log(userInfos.name)
+    let connectInfos = {
+        url: url,
+        name: userInfos.name,
+        username: username,
+        password: password,
+        ent: ent,
+    }
+    res.json({ token: jwt.sign(token, process.env.JSON_WEB_TOKEN), userInfos: jwt.sign(connectInfos, process.env.JSON_WEB_TOKEN), user: JSON.stringify(user) })
 })
 
 app.post('/getInfos', isTokenValid, async (req, res) => {
@@ -120,7 +150,7 @@ app.get('/recipients', isTokenValid, async (req, res) => {
     if (!token || !token.token) return res.json({ error: 'Token invalide' })
     let recipients = await getRecipients(token.token)
     if (!recipients) return res.json({ error: 'Impossible de récupérer les profs' })
-    res.json(recipients)
+    res.json({ profs: recipients, token: req.body?.token, userInfos: req.body?.userInfos })
 })
 
 

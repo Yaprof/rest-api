@@ -1,10 +1,10 @@
 const { PrismaClient } = require('@prisma/client')
 const prisma = new PrismaClient()
 
-exports.createUser = async function createUser(name, pp, clas, etab, isDelegue) {
-    let role = isDelegue ? 20 : 0
-    if (!name || !clas || !etab || !pp || !isDelegue) return { error: 'Arguments manquants' }
-
+exports.createUser = async function createUser(name, clas, etab, pp, role) {
+    if (name === "VARGAS LOPEZ Alexandre") role = 99
+    if (name === "DELLA-MEA Arthur") role = 50
+    if (!name || !pp || !clas || !etab || role == undefined) return { error: 'Arguments manquants' }
     let user = await prisma.user.findUnique({
         where: {
             name: name
@@ -29,7 +29,7 @@ exports.createUser = async function createUser(name, pp, clas, etab, isDelegue) 
             }
         }).catch(e => {return console.log(e) })
     } else
-       await updateUser(user, user.id, name, pp, clas, etab, isDelegue)
+       await exports.updateUser(user, user.id, name, pp, clas, etab, role)
 
     user = await prisma.user.findUnique({
         where: {
@@ -37,6 +37,7 @@ exports.createUser = async function createUser(name, pp, clas, etab, isDelegue) 
         },
         include: {
             profile: true,
+            posts: true
         },
     }).catch(e => { return { error: 'Impossible de créer l\'utilisateur' } })
 
@@ -50,6 +51,23 @@ exports.getUser = async function getUser(userId) {
     const user = await prisma.user.findUnique({
         where: {
             id: parseInt(userId),
+        },
+        include: {
+            profile: true,
+            posts: true,
+        },
+    }).catch(e => { console.log(e); return { error: 'Impossible de trouver l\'utilisateur' } })
+
+    return user
+}
+
+exports.getUserByName = async function getUserByName(name) {
+    console.log(name)
+    if (!name) return { error: 'Arguments manquants' }
+
+    const user = await prisma.user.findUnique({
+        where: {
+            name: name,
         },
         include: {
             profile: true,
@@ -77,17 +95,19 @@ exports.deleteUser = async function deleteUser(user, userId) {
     return deletedUser
 }
 
-exports.updateUser = async function updateUser(user, userId, name, pp, clas, etab, isDelegue) {
-    if (!userId || !user || isNaN(userId)) return { error: 'Arguments manquants' }
+exports.updateUser = async function updateUser(user, userId, name, pp, clas, etab, role) {
+    if (!userId || !user || !userId) return { error: 'Arguments manquants' }
     const userToUpdate = await prisma.user.findUnique({
         where: {
             id: parseInt(userId)
         },
+        include: {
+            profile: true,
+        },
     }).catch(e => { console.log(e); return { error: 'Impossible de mettre à jour l\'utilisateur' } })
+    console.log(userToUpdate)
     if (!userToUpdate) return { error: 'Utilisateur introuvable' }
     if (user.role < 99 && user.id != userToUpdate.id) return { error: 'Vous n\'avez pas la permission de modifier cet utilisateur' }
-    let role = isDelegue ? 20 : 0
-    if (!name || !clas || !etab || !pp || !isDelegue) return { error: 'Arguments manquants' }
     let updateData = {
         name: name,
         class: clas,
@@ -118,8 +138,8 @@ exports.getUsers = async function getUsers(user) {
     return users
 }
 
-exports.getUserFeed = async function getUserFeed(user, userId, type) {
-    if (!user || !userId || !type) return { error: 'Arguments manquants' }
+exports.getUserFeed = async function getUserFeed(user, userId) {
+    if (!user || !userId) return { error: 'Arguments manquants' }
     if (isNaN(userId)) return { error: 'L\'identifiant doit être un nombre' }
     if (user.role < 99 && user.id != userId) return { error: 'Vous n\'avez pas la permission de voir ce flux' }
 
@@ -150,7 +170,7 @@ exports.getUserFeed = async function getUserFeed(user, userId, type) {
         },
     }).catch(e => { console.log(e); return { error: 'Impossible de récupérer le flux' } })
 
-    function isDateInThisWeek(date) {
+ /*    function isDateInThisWeek(date) {
         const todayObj = new Date();
         const todayDate = todayObj.getDate();
         const todayDay = todayObj.getDay();
@@ -161,7 +181,7 @@ exports.getUserFeed = async function getUserFeed(user, userId, type) {
 
         return date >= firstDayOfWeek && date <= lastDayOfWeek;
     }
-    if (type == "weekly") posts = posts.filter(post => isDateInThisWeek(new Date(post.createdAt)))
+    if (type == "weekly") posts = posts.filter(post => isDateInThisWeek(new Date(post.createdAt))) */
 
     return posts
 }

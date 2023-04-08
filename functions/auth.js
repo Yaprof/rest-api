@@ -9,7 +9,7 @@ const axios = require('axios').default;
 dotenv.config();
 
 exports.generateToken = async function generateToken(url, username, password, etab) {
-    console.log('generateToken')
+    console.log('generateToken', url, username, password, etab)
     let response = await axios.post(process.env.PRONOTE_API + '/generatetoken', {
         headers: {
             'Accept': 'application/json',
@@ -21,53 +21,41 @@ exports.generateToken = async function generateToken(url, username, password, et
             password: password,
             ent: etab
         }
-    }).catch(error => { console.log(error); return { error: "Impossible de générer le token" } })
-    if (!response.data || response?.data.token == false) return { error: "Impossible de générer le token" }
-    console.log(response.data.token)
-    return response.data
-}
-
-exports.LoginGenerateToken = async function LoginGenerateToken(url, username, password, etab) {
-    let response = await axios.post(process.env.PRONOTE_API + '/generatetoken', {
-        headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json'
-        },
-        body: {
-            url: url,
-            username: username,
-            password: password,
-            ent: etab
-        }
-    }).catch(error => { console.log(error); return { error: "Impossible de générer le token" } })
+    }).catch(error => { console.log('error generateToken'); return { error: "Impossible de générer le token" } })
+    if (!response.data) return { error: "Impossible de générer le token" }
     console.log(response.data)
-    if (!response.data || response?.data.token == false) return { error: "Impossible de générer le token" }
-    console.log(response.data.token)
-    return response.data
+    return response.data.token
 }
 
 exports.getInfos = async function getInfos(token) {
-    console.log(token)
+    console.log('getInfos', token)
     let response = await axios.get(process.env.PRONOTE_API + "/user?token="+token, {
         headers: {
             'Accept': 'application/json',
             'Content-Type': 'application/json',
         },
-    }).catch(async e => { console.log(e); return { error: "Impossible de récupérer les informations" } })
-    console.log(response.data)
+    }).catch(async e => { console.log('error getInfos'); return { error: "Impossible de récupérer les informations" } })
     if (!response.data || response.data == "notfound" || response.data == "expired") return { error: "Impossible de récupérer les informations" }
     return { name: response.data.name, pp: response.data.profile_picture, class: response.data.class, etab: response.data.establishment, role: (response.data.delegue.length < 1 ? 0 : 20)}
 }
 
+exports.getEntUrl = async function getEntUrl(ent_url) {
+    console.log(ent_url)
+    let response = await axios.get(`https://api.androne.dev/papillon-v4/redirect.php?url=${encodeURIComponent(ent_url)}`)
+    console.log(response.data)
+    if (!response || !response.data || response.data.error) return { error: "Impossible de récupérer l'url de l'ent" }
+    let ent = response.data.url.split(".")[1].replace('-', '_')
+    let url = ent_url + (ent_url.includes('eleve.html') ? '' : '/eleve.html')
+    return {url, ent}
+}
+
 exports.getRecipients = async function getRecipients(token) {
-    console.log(token)
     let response = await axios.get(process.env.PRONOTE_API + "/recipients?token="+token, {
         headers: {
             'Accept': 'application/json',
             'Content-Type': 'application/json',
         },
-    }).catch(async e => { console.log(e); return { error: "Impossible de récupérer les informations" } })
-    console.log(response.data)
+    }).catch(async e => { console.log('error get recipients'); return { error: "Impossible de récupérer les informations" } })
     if (!response.data || response.data == "notfound" || response.data == "expired") return { error: "Impossible de récupérer les informations" }
     return response.data
 }
