@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "git pull && nodemon index.js",
+    "dev": "nodemon index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -12,8 +12,11 @@
   "license": "ISC",
   "dependencies": {
     "@prisma/client": "^4.12.0",
+    "axios": "^1.3.5",
     "cors": "^2.8.5",
+    "dotenv": "^16.0.3",
     "express": "^4.18.2",
+    "jsonwebtoken": "^9.0.0",
     "moment": "^2.29.4"
   },
   "devDependencies": {
