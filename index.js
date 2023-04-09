@@ -18,8 +18,8 @@ dotenv.config();
 const prisma = new PrismaClient()
 const app = express()
 
-var jsonParser = bodyParser.json({ limit: '50mb', type: 'application/json' })
-var urlencodedParser = bodyParser.urlencoded({ limit: '50mb', extended: true, parameterLimit: 50000 })
+var jsonParser = bodyParser.json({ limit: '10mb', extended: true, type: 'application/json' })
+var urlencodedParser = bodyParser.urlencoded({ limit: '10mb', extended: true })
 
 app.use(cors({ origin: true, credentials: true }));
 app.use(jsonParser)
@@ -70,8 +70,14 @@ app.post('/post/:id/dislike', isTokenValid, async (req, res) => {
 })
 
 app.post('/user/create', isTokenValid, async (req, res) => {
-    if (!req.body.name || !req.body.class || !req.body.etab || !req.body.pp || req.body.role == undefined) return res.json({ error: 'Arguments manquants' })
-    let user = await createUser(req.body.name, req.body.class, req.body.etab, req.body.pp, req.body.role)
+    if (!req.body.body.name || !req.body.body.class || !req.body.body.etab || !req.body.body.pp) return res.json({ error: 'Arguments manquants' })
+    let user = await createUser(req.body.body.name, req.body.body.class, req.body.body.etab, req.body.body.pp, req.body.body.role)
+    res.json(user)
+})
+
+app.post('/user/update', isTokenValid, async (req, res) => {
+    let userName = await getUserByName(jwt.verify(req.query.userInfos, process.env.JSON_WEB_TOKEN).name)
+    let user = await updateUser(userName, userName.id, req.body.body.name, req.body.body.pp, req.body.body.class, req.body.body.etab, req.body.body.role)
     res.json(user)
 })
 

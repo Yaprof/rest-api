@@ -96,7 +96,7 @@ exports.deleteUser = async function deleteUser(user, userId) {
 }
 
 exports.updateUser = async function updateUser(user, userId, name, pp, clas, etab, role) {
-    if (!userId || !user || !userId) return { error: 'Arguments manquants' }
+    if (!userId || !user) return { error: 'Arguments manquants' }
     const userToUpdate = await prisma.user.findUnique({
         where: {
             id: parseInt(userId)
@@ -105,15 +105,13 @@ exports.updateUser = async function updateUser(user, userId, name, pp, clas, eta
             profile: true,
         },
     }).catch(e => { console.log(e); return { error: 'Impossible de mettre à jour l\'utilisateur' } })
-    console.log(userToUpdate)
     if (!userToUpdate) return { error: 'Utilisateur introuvable' }
     if (user.role < 99 && user.id != userToUpdate.id) return { error: 'Vous n\'avez pas la permission de modifier cet utilisateur' }
-    let updateData = {
-        name: name,
-        class: clas,
-        establishment: etab,
-        role: role,
-    }
+    let updateData = {}
+    if (name && name != userToUpdate.name) updateData.name = name
+    if (clas && clas != userToUpdate.class) updateData.class = clas
+    if (etab && etab != userToUpdate.establishment) updateData.establishment = etab
+    if (role && role != userToUpdate.role) updateData.role = role
     if (!(userToUpdate.profile.pp.startsWith('data:') && pp.startsWith('https://'))) updateData.profile = { update: { pp: pp } }
     const updatedUser = await prisma.user.update({
         where: {
