@@ -9,10 +9,8 @@ const dotenv = require('dotenv');
 const { getUser, createUser, getUserFeed, updateUser, getUserByName } = require('./functions/user')
 const { getPost, createPost, deletePost, likePost, dislikePost } = require('./functions/post')
 const { generateToken, getInfos, getRecipients, getEntUrl } = require('./functions/auth')
-console.log(jwt.verify("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJodHRwczovLzAwNjAwMjBQLmluZGV4LWVkdWNhdGlvbi5uZXQvcHJvbm90ZS9lbGV2ZS5odG1sIiwidXNlcm5hbWUiOiJ6ZWJpbGFtb3VjaGUiLCJwYXNzd29yZCI6IkFsZXh4bGViZXN0MjAwNyMiLCJlbnQiOiJhdHJpdW1fc3VkIiwiaWF0IjoxNjgwOTYyNTY4fQ.d3YNxOVgjg0SRpsymLNI3PhA3hZebd3Pg9WlnF21lsM", process.env.JSON_WEB_TOKEN))
 
 const isTokenValid = require('./middleware/tokenValid').default
-console.log(isTokenValid)
 
 moment.locale('fr')
 dotenv.config();
@@ -117,6 +115,7 @@ app.post('/login', async (req, res) => {
     if (geturl.error) return res.json(geturl)
     let url = geturl.url
     ent = geturl.ent
+    console.log(geturl)
     if (!ent) return res.json({ error: 'Impossible de récupérer l\'url de l\'ENT' })
     let token = await generateToken(url, username, password, ent)
     if (!token) return res.json({ error: 'Impossible de générer le token' })
