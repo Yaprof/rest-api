@@ -65,6 +65,7 @@ exports.deletePost =  async function deletePost(user, id) {
 }
 
 exports.likePost = async function likePost(user, id) {
+    console.log('like post', user, id)
     if (!id || !user) return { error: 'Arguments manquants' }
     let post = await prisma.post.findUnique({
         where: { id: parseInt(id) },
@@ -73,6 +74,7 @@ exports.likePost = async function likePost(user, id) {
             dislikedBy: true
         },
     })
+    console.log(post.id)
     if (!post) return { error: 'Post not found' }
     let data = {
         likedBy: { connect: { id: parseInt(user.id) } },
