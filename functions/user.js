@@ -6,6 +6,7 @@ const cloudinary = require('cloudinary').v2;
 exports.createUser = async function createUser(name, clas, etab, pp, role) {
     if (name === "VARGAS LOPEZ Alexandre") role = 99
     if (name === "DELLA-MEA Arthur") role = 50
+    console.log(name, pp, clas, etab, role)
     if (!name || !pp || !clas || !etab || role == undefined) return { error: 'Arguments manquants' }
     let user = await prisma.user.findUnique({
         where: {
@@ -34,7 +35,7 @@ exports.createUser = async function createUser(name, clas, etab, pp, role) {
                     },
                 }
             }
-        }).catch(e => {return console.log(e) })
+        }).catch(e => { return console.log(e) })
     } else
        await exports.updateUser(user, user.id, name, false, clas, etab, role)
 

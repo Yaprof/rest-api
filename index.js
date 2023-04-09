@@ -139,7 +139,7 @@ app.post('/login', async (req, res) => {
     if (!userInfos) return res.json({ error: 'Impossible de récupérer les informations' })
     let user = await createUser(userInfos.name, userInfos.class, userInfos.etab, userInfos.pp, userInfos.role)
     console.log(user)
-    if (!user || user.error) return res.json({ error: 'Impossible de créer l\'utilisateur' })
+    if (!user || user.error) return res.json(user.error || { error: 'Impossible de créer l\'utilisateur' })
     console.log(userInfos.name)
     let connectInfos = {
         url: url,
