@@ -60,15 +60,13 @@ app.post('/post/:id/like', isTokenValid, async (req, res) => {
     let user = await getUserByName(jwt.verify(req.query.userInfos, process.env.JSON_WEB_TOKEN).name)
     if (!user) return res.json({ error: 'User introuvable' })
     let post = await likePost(user, req.params.id)
-    console.log(post.id, user.name)
     res.json(post)
 })
 
 app.post('/post/:id/dislike', isTokenValid, async (req, res) => {
     if (!req.params.id) return res.json({ error: 'Arguments manquants' })
-     let user = await getUserByName(jwt.verify(req.query.userInfos, process.env.JSON_WEB_TOKEN).name)
+    let user = await getUserByName(jwt.verify(req.query.userInfos, process.env.JSON_WEB_TOKEN).name)
     if (!user) return res.json({ error: 'User introuvable' })
-    console.log(user.name)
     let post = await dislikePost(user, req.params.id)
     res.json(post)
 })
