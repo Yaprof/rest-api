@@ -1,6 +1,8 @@
 const { PrismaClient } = require('@prisma/client')
 const prisma = new PrismaClient()
 
+const cloudinary = require('cloudinary').v2;
+
 exports.createUser = async function createUser(name, clas, etab, pp, role) {
     if (name === "VARGAS LOPEZ Alexandre") role = 99
     if (name === "DELLA-MEA Arthur") role = 50
@@ -15,6 +17,11 @@ exports.createUser = async function createUser(name, clas, etab, pp, role) {
     }).catch(e => { return false })
 
     if (!user) {
+        const res = await cloudinary.uploader.upload(pp, { public_id: name, folder: 'user/icons' })
+        if (!res) return { error: 'Impossible d\'upload la pp' }
+
+        let url = await cloudinary.url(res.secure_url, {width: 100, height: 100, crop: "cover", fetch_format: "auto"})
+
         user = await prisma.user.create({
             data: {
                 name:name,
@@ -23,13 +30,13 @@ exports.createUser = async function createUser(name, clas, etab, pp, role) {
                 role: role,
                 profile: {
                     create: {
-                        pp: pp,
+                        pp: url,
                     },
                 }
             }
         }).catch(e => {return console.log(e) })
     } else
-       await exports.updateUser(user, user.id, name, pp, clas, etab, role)
+       await exports.updateUser(user, user.id, name, false, clas, etab, role)
 
     user = await prisma.user.findUnique({
         where: {
@@ -107,12 +114,24 @@ exports.updateUser = async function updateUser(user, userId, name, pp, clas, eta
     }).catch(e => { console.log(e); return { error: 'Impossible de mettre à jour l\'utilisateur' } })
     if (!userToUpdate) return { error: 'Utilisateur introuvable' }
     if (user.role < 99 && user.id != userToUpdate.id) return { error: 'Vous n\'avez pas la permission de modifier cet utilisateur' }
+
+    let url;
+
+    if (pp) {
+        const res = await cloudinary.uploader.upload(pp, { public_id: name, folder: 'user/icons', overwrite: true, use_filename: true, unique_filename: false })
+        if (!res) return { error: 'Impossible d\'upload la pp' }
+
+        url = await cloudinary.url(res.secure_url, { width: 100, height: 100, crop: "cover", fetch_format: "auto" })
+    }
+
+    console.log(pp, url)
+
     let updateData = {}
     if (name && name != userToUpdate.name) updateData.name = name
     if (clas && clas != userToUpdate.class) updateData.class = clas
     if (etab && etab != userToUpdate.establishment) updateData.establishment = etab
     if (role && role != userToUpdate.role) updateData.role = role
-    if (!(userToUpdate.profile.pp.startsWith('data:') && pp.startsWith('https://'))) updateData.profile = { update: { pp: pp } }
+    if (url && url != userToUpdate.profile.pp) updateData.profile = { update: { pp: url } }
     const updatedUser = await prisma.user.update({
         where: {
             id: parseInt(userId)

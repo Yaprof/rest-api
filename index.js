@@ -12,6 +12,15 @@ const { generateToken, getInfos, getRecipients, getEntUrl } = require('./functio
 
 const isTokenValid = require('./middleware/tokenValid').default
 
+const cloudinary = require('cloudinary').v2;
+
+// Configuration
+cloudinary.config({
+  cloud_name: "dzg9awmm8",
+  api_key: "735232399657949",
+  api_secret: "gTftni7_kDNTj2i8gzU9wNtQRO4"
+});
+
 moment.locale('fr')
 dotenv.config();
 
