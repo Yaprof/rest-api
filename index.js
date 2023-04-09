@@ -116,6 +116,7 @@ app.post('/login', async (req, res) => {
     let { username, password, ent_url } = req.body
     if (!username || !password || !ent_url) return res.json({ error: 'Arguments manquants' })
     let geturl = await getEntUrl(ent_url)
+    if (geturl.error) return res.json(geturl)
     let url = geturl.url
     ent = geturl.ent
     if (!ent) return res.json({ error: 'Impossible de récupérer l\'url de l\'ENT' })
