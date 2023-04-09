@@ -78,6 +78,7 @@ exports.likePost = async function likePost(user, id) {
         likedBy: { connect: { id: parseInt(user.id) } },
         dislikedBy: { disconnect: { id: parseInt(user.id) } },
     }
+    console.log(post.likedBy.find(u => u.id == user.id), user.id, user.name)
     if (post.likedBy.find(u => u.id == user.id)) {
         data = {
             likedBy: { disconnect: { id: parseInt(user.id) } },
