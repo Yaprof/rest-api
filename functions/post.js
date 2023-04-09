@@ -78,7 +78,7 @@ exports.likePost = async function likePost(user, id) {
         likedBy: { connect: { id: parseInt(user.id) } },
         dislikedBy: { disconnect: { id: parseInt(user.id) } },
     }
-    if (post.likedBy.find(user => user.id == user.id)) {
+    if (post.likedBy.find(u => u.id == user.id)) {
         data = {
             likedBy: { disconnect: { id: parseInt(user.id) } },
             dislikedBy: { disconnect: { id: parseInt(user.id) } },
@@ -110,7 +110,7 @@ exports.dislikePost = async function dislikePost(user, id) {
         likedBy: { disconnect: { id: parseInt(user.id) } },
         dislikedBy: { connect: { id: parseInt(user.id) } },
     }
-    if (post.dislikedBy.find(user => user.id == user.id)) {
+    if (post.dislikedBy.find(u => u.id == user.id)) {
         data = {
             likedBy: { disconnect: { id: parseInt(user.id) } },
             dislikedBy: { disconnect: { id: parseInt(user.id) } },
