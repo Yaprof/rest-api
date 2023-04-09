@@ -27,12 +27,12 @@ dotenv.config();
 const prisma = new PrismaClient()
 const app = express()
 
-var jsonParser = bodyParser.json({ limit: '10mb', extended: true, type: 'application/json' })
-var urlencodedParser = bodyParser.urlencoded({ limit: '10mb', extended: true })
+var jsonParser = bodyParser.json({ limit: '50mb', type: 'application/json', extended: true  })
+var urlencodedParser = bodyParser.urlencoded({ limit: '50mb', extended: true })
 
 app.use(cors({ origin: true, credentials: true }));
-app.use(jsonParser)
-app.use(urlencodedParser)
+app.use(express.json({limit: '50mb'}))
+app.use(express.urlencoded({limit: '50mb'}))
 
 app.get('/feed/:userId', isTokenValid, async (req, res) => {
     console.log(req.body)
