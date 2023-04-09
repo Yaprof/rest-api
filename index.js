@@ -130,7 +130,7 @@ app.post('/login', async (req, res) => {
     if (geturl.error) return res.json(geturl)
     let url = geturl.url
     ent = geturl.ent
-    console.log(geturl)
+    console.log(url, username, password, ent)
     if (!ent) return res.json({ error: 'Impossible de récupérer l\'url de l\'ENT' })
     let token = await generateToken(url, username, password, ent)
     if (!token) return res.json({ error: 'Impossible de générer le token' })

@@ -21,7 +21,7 @@ exports.generateToken = async function generateToken(url, username, password, et
             password: password,
             ent: etab
         }
-    }).catch(error => { console.log('error generateToken'); return { error: "Impossible de générer le token" } })
+    }).catch(error => { console.log('error generateToken', error); return { error: "Impossible de générer le token" } })
     if (!response.data) return { error: "Impossible de générer le token" }
     console.log(response.data)
     return response.data.token
