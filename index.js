@@ -6,11 +6,12 @@ const moment = require('moment')
 const jwt = require('jsonwebtoken');
 const dotenv = require('dotenv');
 
-const { getUser, createUser, getUserFeed, updateUser, getUserByName } = require('./functions/user')
+const { getUser, createUser, getUserFeed, updateUser, getUserByName, getUsers } = require('./functions/user')
 const { getPost, createPost, deletePost, likePost, dislikePost } = require('./functions/post')
 const { generateToken, getInfos, getRecipients, getEntUrl } = require('./functions/auth')
 
 const isTokenValid = require('./middleware/tokenValid').default
+const isAdmin = require('./middleware/isAdmin').default
 
 moment.locale('fr')
 dotenv.config();
@@ -154,6 +155,13 @@ app.get('/recipients', isTokenValid, async (req, res) => {
     if (!recipients) return res.json({ error: 'Impossible de récupérer les profs' })
     res.json({ profs: recipients, token: req.body?.token, userInfos: req.body?.userInfos })
 })
+
+app.get('/admin/users', isAdmin, async (req, res) => {
+    let users = await getUsers()
+    if (!users) return res.json({ error: 'Impossible de récupérer les utilisateurs' })
+    res.json(users)
+})
+
 
 
 const server = app.listen(8080)
