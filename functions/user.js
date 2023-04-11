@@ -146,11 +146,10 @@ exports.updateUser = async function updateUser(user, userId, name, pp, clas, eta
 }
 
 exports.getUsers = async function getUsers(user) {
-    if (!user) return { error: 'Arguments manquants' }
-    if (user.role < 99) return { error: 'Vous n\'avez pas la permission de voir les utilisateurs' }
     const users = await prisma.user.findMany({
         include: {
             profile: true,
+            posts: true,
         },
     }).catch(e => { console.log(e); return { error: 'Impossible de récupérer les utilisateurs' } })
     return users
