@@ -99,6 +99,13 @@ app.get('/user', isTokenValid, async (req, res) => {
     res.json(user)
 })
 
+app.get('/user/:id', isTokenValid, async (req, res) => {
+    if (!req.params.id) return res.json({ error: 'Arguments invalides' })
+    let user = await getUser(req.params.id)
+    if (!user) return res.json({ error: 'User introuvable' })
+    res.json(user)
+})
+
 app.delete('/user/:id', isTokenValid, async (req, res) => {
     if (!req.params.id || !req.body.user) return res.json({ error: 'Arguments manquants' })
     let user = await deleteUser(req.body.user, req.params.id)
