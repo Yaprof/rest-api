@@ -21,17 +21,12 @@ exports.default = async function isTokenValid(req, res, next) {
             let new_token = await generateToken(infos.url, infos.username, infos.password, infos.ent)
             if (!new_token) return res.status(400).send('Invalid token')
             verified = { token: new_token }
-            console.log('try get new user db')
-            new_userDb = await getInfos(verified.token)
-            if (!new_userDb || new_userDb.error) return res.status(400).send('Invalid user db')
-            userDb = new_userDb
         }
 
         req.headers['authorization'] = jwt.sign({ token: verified.token }, process.env.JSON_WEB_TOKEN)
-        if (userDb.name != infos.name) return res.status(400).send('Invalid user')
         req.body['userInfos'] = jwt.sign({
             url: infos.url,
-            name: userDb.name,
+            name: infos.name,
             username: infos.username,
             password: infos.password,
             ent: infos.ent,
