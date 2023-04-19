@@ -62,7 +62,12 @@ exports.getUser = async function getUser(userId) {
         },
         include: {
             profile: true,
-            posts: true,
+            posts: {
+                include: {
+                    author: true,
+                    pointer: true
+                }
+            }
         },
     }).catch(e => { console.log(e); return { error: 'Impossible de trouver l\'utilisateur' } })
 
@@ -79,7 +84,12 @@ exports.getUserByName = async function getUserByName(name) {
         },
         include: {
             profile: true,
-            posts: true,
+            posts: {
+                include: {
+                    author: true,
+                    pointer: true
+                }
+            },
         },
     }).catch(e => { console.log(e); return { error: 'Impossible de trouver l\'utilisateur' } })
 
