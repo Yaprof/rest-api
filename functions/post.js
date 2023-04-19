@@ -1,12 +1,12 @@
 const { PrismaClient } = require('@prisma/client')
 const prisma = new PrismaClient()
 const moment = require('moment')
+const { addCoin, removeCoin } = require('./economy')
 
 exports.createPost = async function createPost(user, pointer, content, date) {
     console.log(user.id, pointer, content, date)
     if (!pointer || !content || !user || !date) return { error: 'Arguments manquants' }
     if (!pointer.name || !pointer.subject) return { error: 'Prof incorrect' }
-    
 
     let colors = ['#FF2D00', '#FF9500', '#FFCC00', '#4CD964', '#5AC8FA', '#007AFF', '#5856D6', '#FF2D55', '#8E8E93']
     if (date == 'today') date = moment()
@@ -50,6 +50,7 @@ exports.createPost = async function createPost(user, pointer, content, date) {
         },
     }).catch(e => { return { error: "Impossible de créer le post" } })
 
+    addCoin(user, 5)
     return post
 }
 
@@ -61,6 +62,7 @@ exports.deletePost =  async function deletePost(user, id) {
         },
     })
     if (!post) return { error: 'Post introuvable' }
+    if (post.authorId == user.id) removeCoin(user, 5)
     return post
 }
 
@@ -93,6 +95,8 @@ exports.likePost = async function likePost(user, id) {
             dislikedBy: true
         },
     })
+    if (!post) return { error: 'Post not found' }
+    addCoin(user, 1)
     return post
 }
 
@@ -125,5 +129,7 @@ exports.dislikePost = async function dislikePost(user, id) {
             dislikedBy: true
         },
     })
+    if (!post) return { error: 'Post not found' }
+    addCoin(user, 1)
     return post
 }
