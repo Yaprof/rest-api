@@ -64,7 +64,11 @@ exports.getUser = async function getUser(userId) {
             profile: true,
             posts: {
                 include: {
-                    author: true,
+                    author: {
+                        include: {
+                            profile: true
+                        }
+                    },
                     pointer: true
                 }
             }
@@ -86,7 +90,11 @@ exports.getUserByName = async function getUserByName(name) {
             profile: true,
             posts: {
                 include: {
-                    author: true,
+                    author: {
+                        include: {
+                            profile: true
+                        }
+                    },
                     pointer: true
                 }
             },
