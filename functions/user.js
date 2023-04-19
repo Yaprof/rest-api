@@ -69,7 +69,9 @@ exports.getUser = async function getUser(userId) {
                             profile: true
                         }
                     },
-                    pointer: true
+                    pointer: true,
+                    likedBy: true,
+                    dislikedBy: true
                 }
             }
         },
@@ -95,7 +97,9 @@ exports.getUserByName = async function getUserByName(name) {
                             profile: true
                         }
                     },
-                    pointer: true
+                    pointer: true,
+                    likedBy: true,
+                    dislikedBy: true
                 }
             },
         },
