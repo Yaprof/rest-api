@@ -16,7 +16,8 @@ exports.setCoin = async function setCoin(user, coin) {
 }
 
 exports.addCoin = async function addCoin(user, coin) {
-    if (!user || !coin) return { error: 'Arguments manquants' }
+    console.log(coin)
+    if (!user || coin == undefined) return { error: 'Arguments manquants' }
     let data = {
         coins: {
             increment: parseInt(coin)
@@ -33,7 +34,7 @@ exports.addCoin = async function addCoin(user, coin) {
 }
 
 exports.removeCoin = async function removeCoin(user, coin) {
-    if (!user || !coin) return { error: 'Arguments manquants' }
+    if (!user || coin == undefined) return { error: 'Arguments manquants' }
     user = await prisma.profile.findUnique({
         where: { userId: parseInt(user.id) },
     })

@@ -1,4 +1,4 @@
-const { getInfos, generateToken } = require("../functions/auth")
+const { getInfos, generateToken, getRecipients } = require("../functions/auth")
 const { getUser } = require("../functions/user")
 const jwt = require('jsonwebtoken');
 const dotenv = require('dotenv');
@@ -15,8 +15,8 @@ exports.default = async function isTokenValid(req, res, next) {
         if (!userInfos) return res.status(400).send('Invalid token')
 
         const infos = jwt.verify(userInfos, process.env.JSON_WEB_TOKEN)
-        let userDb = await getInfos(verified.token)
-        if (!userDb || userDb.error) {
+        let recipients = await getRecipients(verified.token)
+        if (!recipients || recipients.error) {
             console.log('try to generate new token', req.path)
             let new_token = await generateToken(infos.url, infos.username, infos.password, infos.ent)
             if (!new_token) return res.status(400).send('Invalid token')

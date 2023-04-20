@@ -60,9 +60,13 @@ exports.deletePost =  async function deletePost(user, id) {
         where: {
             id: parseInt(id)
         },
+        include: {
+            likedBy: true,
+            dislikedBy: true
+        }
     })
     if (!post) return { error: 'Post introuvable' }
-    if (post.authorId == user.id) removeCoin(user, 5)
+    if (post.authorId == user.id && (post.likedBy.length < 3 && post.dislikedBy.length < 3)) removeCoin(user, 5)
     return post
 }
 
@@ -80,12 +84,15 @@ exports.likePost = async function likePost(user, id) {
         likedBy: { connect: { id: parseInt(user.id) } },
         dislikedBy: { disconnect: { id: parseInt(user.id) } },
     }
+    let coinToChange = 1
     if (post.likedBy.find(u => u.id == user.id)) {
+        coinToChange = -1
         data = {
             likedBy: { disconnect: { id: parseInt(user.id) } },
             dislikedBy: { disconnect: { id: parseInt(user.id) } },
         }
     }
+    if (post.dislikedBy.find(u => u.id == user.id)) coinToChange = 0
 
     post = await prisma.post.update({
         where: { id: parseInt(id) },
@@ -96,7 +103,7 @@ exports.likePost = async function likePost(user, id) {
         },
     })
     if (!post) return { error: 'Post not found' }
-    addCoin(user, 1)
+    addCoin(user, coinToChange)
     return post
 }
 
@@ -114,12 +121,15 @@ exports.dislikePost = async function dislikePost(user, id) {
         likedBy: { disconnect: { id: parseInt(user.id) } },
         dislikedBy: { connect: { id: parseInt(user.id) } },
     }
+    let coinToChange = 1
     if (post.dislikedBy.find(u => u.id == user.id)) {
+        coinToChange = -1
         data = {
             likedBy: { disconnect: { id: parseInt(user.id) } },
             dislikedBy: { disconnect: { id: parseInt(user.id) } },
         }
     }
+    if (post.likedBy.find(u => u.id == user.id)) coinToChange = 0
 
     post = await prisma.post.update({
         where: { id: parseInt(id) },
@@ -130,6 +140,6 @@ exports.dislikePost = async function dislikePost(user, id) {
         },
     })
     if (!post) return { error: 'Post not found' }
-    addCoin(user, 1)
+    addCoin(user, coinToChange)
     return post
 }
