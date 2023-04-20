@@ -1,12 +1,12 @@
 const { PrismaClient } = require('@prisma/client')
 const prisma = new PrismaClient()
 const moment = require('moment')
+const { addCoin, removeCoin } = require('./economy')
 
 exports.createPost = async function createPost(user, pointer, content, date) {
     console.log(user.id, pointer, content, date)
     if (!pointer || !content || !user || !date) return { error: 'Arguments manquants' }
     if (!pointer.name || !pointer.subject) return { error: 'Prof incorrect' }
-    
 
     let colors = ['#FF2D00', '#FF9500', '#FFCC00', '#4CD964', '#5AC8FA', '#007AFF', '#5856D6', '#FF2D55', '#8E8E93']
     if (date == 'today') date = moment()
@@ -50,6 +50,7 @@ exports.createPost = async function createPost(user, pointer, content, date) {
         },
     }).catch(e => { return { error: "Impossible de créer le post" } })
 
+    addCoin(user, 5)
     return post
 }
 
@@ -59,8 +60,13 @@ exports.deletePost =  async function deletePost(user, id) {
         where: {
             id: parseInt(id)
         },
+        include: {
+            likedBy: true,
+            dislikedBy: true
+        }
     })
     if (!post) return { error: 'Post introuvable' }
+    if (post.authorId == user.id && (post.likedBy.length < 3 && post.dislikedBy.length < 3)) removeCoin(user, 5)
     return post
 }
 
@@ -78,12 +84,15 @@ exports.likePost = async function likePost(user, id) {
         likedBy: { connect: { id: parseInt(user.id) } },
         dislikedBy: { disconnect: { id: parseInt(user.id) } },
     }
+    let coinToChange = 1
     if (post.likedBy.find(u => u.id == user.id)) {
+        coinToChange = -1
         data = {
             likedBy: { disconnect: { id: parseInt(user.id) } },
             dislikedBy: { disconnect: { id: parseInt(user.id) } },
         }
     }
+    if (post.dislikedBy.find(u => u.id == user.id)) coinToChange = 0
 
     post = await prisma.post.update({
         where: { id: parseInt(id) },
@@ -93,6 +102,8 @@ exports.likePost = async function likePost(user, id) {
             dislikedBy: true
         },
     })
+    if (!post) return { error: 'Post not found' }
+    addCoin(user, coinToChange)
     return post
 }
 
@@ -110,12 +121,15 @@ exports.dislikePost = async function dislikePost(user, id) {
         likedBy: { disconnect: { id: parseInt(user.id) } },
         dislikedBy: { connect: { id: parseInt(user.id) } },
     }
+    let coinToChange = 1
     if (post.dislikedBy.find(u => u.id == user.id)) {
+        coinToChange = -1
         data = {
             likedBy: { disconnect: { id: parseInt(user.id) } },
             dislikedBy: { disconnect: { id: parseInt(user.id) } },
         }
     }
+    if (post.likedBy.find(u => u.id == user.id)) coinToChange = 0
 
     post = await prisma.post.update({
         where: { id: parseInt(id) },
@@ -125,5 +139,7 @@ exports.dislikePost = async function dislikePost(user, id) {
             dislikedBy: true
         },
     })
+    if (!post) return { error: 'Post not found' }
+    addCoin(user, coinToChange)
     return post
 }
