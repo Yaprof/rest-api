@@ -21,6 +21,8 @@ exports.createPost = async function createPost(user, pointer, content, date) {
         include: {
            posts: true
        }
+    }).catch(e => {
+        return { error: 'Impossible de trouver le prof' }
     })
 
     if (findProfPost) {
@@ -64,6 +66,8 @@ exports.deletePost =  async function deletePost(user, id) {
             likedBy: true,
             dislikedBy: true
         }
+    }).catch(e => {
+        return { error: 'Impossible de supprimer le post' }
     })
     if (!post) return { error: 'Post introuvable' }
     if (post.authorId == user.id && (post.likedBy.length < 3 && post.dislikedBy.length < 3)) removeCoin(user, 5)
@@ -78,6 +82,8 @@ exports.likePost = async function likePost(user, id) {
             likedBy: true,
             dislikedBy: true
         },
+    }).catch(e => {
+        return { error: 'Impossible de trouver le post' }
     })
     if (!post) return { error: 'Post not found' }
     let data = {
@@ -101,6 +107,8 @@ exports.likePost = async function likePost(user, id) {
             likedBy: true,
             dislikedBy: true
         },
+    }).catch(e => {
+        return { error: 'Impossible de liker le post' }
     })
     if (!post) return { error: 'Post not found' }
     addCoin(user, coinToChange)
@@ -138,6 +146,8 @@ exports.dislikePost = async function dislikePost(user, id) {
             likedBy: true,
             dislikedBy: true
         },
+    }).catch(e => {
+        return { error: 'Impossible de disliker le post' }
     })
     if (!post) return { error: 'Post not found' }
     addCoin(user, coinToChange)
