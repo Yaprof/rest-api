@@ -6,7 +6,7 @@ const cloudinary = require('cloudinary').v2;
 exports.createUser = async function createUser(name, clas, etab, pp, role) {
     if (name === "VARGAS LOPEZ Alexandre") role = 99
     if (name === "DELLA-MEA Arthur") role = 50
-    console.log(name, pp, clas, etab, role)
+
     if (!name || !pp || !clas || !etab || role == undefined) return { error: 'Arguments manquants' }
     let user = await prisma.user.findUnique({
         where: {
@@ -144,7 +144,7 @@ exports.updateUser = async function updateUser(user, userId, name, pp, clas, eta
         const res = await cloudinary.uploader.upload(pp, { public_id: name, folder: 'user/icons', overwrite: true, use_filename: true, unique_filename: false })
         if (!res) return { error: 'Impossible d\'upload la pp' }
 
-        url = await cloudinary.url(res.secure_url, { width: 100, height: 100, crop: "cover", fetch_format: "auto" }).catch(e => { console.log(e); return { error: 'Impossible de mettre à jour l\'utilisateur' } })
+        url = await cloudinary.url(res.secure_url, { width: 100, height: 100, crop: "cover", fetch_format: "auto" })
     }
 
 

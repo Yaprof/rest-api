@@ -9,6 +9,7 @@ const dotenv = require('dotenv');
 const { getUser, createUser, getUserFeed, updateUser, getUserByName, getUsers } = require('./functions/user')
 const { getPost, createPost, deletePost, likePost, dislikePost } = require('./functions/post')
 const { generateToken, getInfos, getRecipients, getEntUrl } = require('./functions/auth')
+const { getAllBadges, buyBadge } = require('./functions/badges')
 
 const isTokenValid = require('./middleware/tokenValid').default
 const isAdmin = require('./middleware/isAdmin').default
@@ -96,14 +97,14 @@ app.get('/user', isTokenValid, async (req, res) => {
     let userbyName = await getUserByName(jwt.verify(req.query.userInfos, process.env.JSON_WEB_TOKEN).name)
     if (!userbyName) return res.json({ error: 'User introuvable' })
     let user = await getUser(userbyName.id)
-    res.json(user)
+    res.json({...user, token: req.headers['authorization']})
 })
 
 app.get('/user/:id', isTokenValid, async (req, res) => {
     if (!req.params.id) return res.json({ error: 'Arguments invalides' })
     let user = await getUser(req.params.id)
     if (!user) return res.json({ error: 'User introuvable' })
-    res.json(user)
+    res.json({...user, token: req.headers['authorization']})
 })
 
 app.delete('/user/:id', isTokenValid, async (req, res) => {
@@ -182,6 +183,23 @@ app.get('/admin/users', isAdmin, async (req, res) => {
     res.json(users)
 })
 
+app.get('/badges', isTokenValid, async (req, res) => {
+    let token = jwt.verify(req.headers['authorization'], process.env.JSON_WEB_TOKEN)
+    if (!token || !token.token) return res.json({ error: 'Token invalide' })
+    let badges = await getAllBadges()
+    if (!badges) return res.json({ error: 'Impossible de récupérer les badges' })
+    res.json(badges)
+})
+
+app.put('/badge/:id', isTokenValid, async (req, res) => {
+    let token = jwt.verify(req.headers['authorization'], process.env.JSON_WEB_TOKEN)
+    if (!token || !token.token) return res.json({ error: 'Token invalide' })
+    let user = jwt.verify(req.body.userInfos, process.env.JSON_WEB_TOKEN)
+    if (!user || !req.params.id) return res.json({ error: 'Arguments manquants' })
+    let badge = await buyBadge(user, req.params.id)
+    if (!badge) return res.json({ error: 'Impossible de modifier le badge' })
+    res.json(badge)
+ })
 
 
 const server = app.listen(8080)
