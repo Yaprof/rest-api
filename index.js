@@ -9,7 +9,7 @@ const dotenv = require('dotenv');
 const { getUser, createUser, getUserFeed, updateUser, getUserByName, getUsers } = require('./functions/user')
 const { getPost, createPost, deletePost, likePost, dislikePost } = require('./functions/post')
 const { generateToken, getInfos, getRecipients, getEntUrl } = require('./functions/auth')
-const { getAllBadges, buyBadge } = require('./functions/badges')
+const { getAllBadges, buyBadge, updatebadges } = require('./functions/badges')
 
 const isTokenValid = require('./middleware/tokenValid').default
 const isAdmin = require('./middleware/isAdmin').default
@@ -191,10 +191,24 @@ app.get('/badges', isTokenValid, async (req, res) => {
     res.json(badges)
 })
 
+app.post('/badges/:id', isTokenValid, async (req, res) => {
+    let token = jwt.verify(req.headers['authorization'], process.env.JSON_WEB_TOKEN)
+    if (!token || !token.token) return res.json({ error: 'Token invalide' })
+    let user = jwt.verify(req.query.userInfos, process.env.JSON_WEB_TOKEN)
+    if (!user || !req.body.body.new_badges || !req.params.id) return res.json({ error: 'Arguments manquants' })
+    let fetchedUser = await getUser(req.params.id)
+    if (!fetchedUser) return res.json({ error: 'Impossible de récupérer l\'utilisateur' })
+    if (user.role < 50 && fetchedUser.id !== user.id) return res.json({ error: 'Vous n\'avez pas les droits pour modifier cet utilisateur' })
+    let new_badges = await updatebadges(fetchedUser, req.body.body.new_badges)
+    if (!new_badges) return res.json({ error: 'Impossible de mettre à jour les badges' })
+    res.json(new_badges)
+})
+
+
 app.put('/badge/:id', isTokenValid, async (req, res) => {
     let token = jwt.verify(req.headers['authorization'], process.env.JSON_WEB_TOKEN)
     if (!token || !token.token) return res.json({ error: 'Token invalide' })
-    let user = jwt.verify(req.body.userInfos, process.env.JSON_WEB_TOKEN)
+    let user = jwt.verify(req.query.userInfos, process.env.JSON_WEB_TOKEN)
     if (!user || !req.params.id) return res.json({ error: 'Arguments manquants' })
     let badge = await buyBadge(user, req.params.id)
     if (!badge) return res.json({ error: 'Impossible de modifier le badge' })
