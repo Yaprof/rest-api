@@ -6,7 +6,9 @@ const { addCoin, removeCoin } = require('./economy')
 exports.createPost = async function createPost(user, pointer, content, date) {
     console.log(user.id, pointer, content, date)
     if (!pointer || !content || !user || !date) return { error: 'Arguments manquants' }
-    if (!pointer.name || !pointer.subject) return { error: 'Prof incorrect' }
+    console.log(pointer)
+    if (!pointer.name || pointer.subject == undefined) return { error: 'Prof incorrect' }
+    console.log(pointer)
 
     let colors = ['#FF2D00', '#FF9500', '#FFCC00', '#4CD964', '#5AC8FA', '#007AFF', '#5856D6', '#FF2D55', '#8E8E93']
     if (date == 'today') date = moment()
@@ -44,7 +46,7 @@ exports.createPost = async function createPost(user, pointer, content, date) {
                     },
                     create: {
                         name: pointer?.name,
-                        subject: pointer?.subject,
+                        subject: pointer?.subject || null,
                         color: colors[Math.floor(Math.random() * colors.length)]
                     }
                 }
