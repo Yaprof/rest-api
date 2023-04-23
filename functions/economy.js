@@ -57,6 +57,7 @@ exports.removeCoin = async function removeCoin(user, coin) {
     }).catch(e => {
         return { error: 'Impossible de retirer des coins' }
     })
+    console.log(user, coin)
     if (!user) return { error: 'User not found' }
     return user
 }
