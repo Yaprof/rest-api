@@ -16,6 +16,7 @@ exports.buyBadge = async function buyBadge(user, id) {
     if (user.profile.badges.find(b => b == id)) return { error: 'Badge déjà acheté' }
     if (parseInt(user.profile.coins) < parseInt(badge.price)) return { error: 'Pas assez de coins' }
     user.profile.badges.push(badge.id)
+    console.log(user)
     user = await prisma.profile.update({
         where: { id: parseInt(user.id) },
         data: {
