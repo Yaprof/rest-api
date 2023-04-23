@@ -43,6 +43,7 @@ exports.removeCoin = async function removeCoin(user, coin) {
     }).catch(e => {
         return { error: 'Impossible de trouver le profil' }
     })
+    console.log("first user", user)
     if (!user) return { error: 'User not found' }
     if (user.coins < coin) coin = user.coins
     let data = {
