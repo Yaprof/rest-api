@@ -52,7 +52,7 @@ exports.createPost = async function createPost(user, pointer, content, date) {
         },
     }).catch(e => { return { error: "Impossible de créer le post" } })
 
-    addCoin(user, 5)
+    await addCoin(user, 5)
     return post
 }
 
@@ -70,7 +70,7 @@ exports.deletePost =  async function deletePost(user, id) {
         return { error: 'Impossible de supprimer le post' }
     })
     if (!post) return { error: 'Post introuvable' }
-    if (post.authorId == user.id && (post.likedBy.length < 3 && post.dislikedBy.length < 3)) removeCoin(user, 5)
+    if (post.authorId == user.id && (post.likedBy.length < 3 && post.dislikedBy.length < 3)) await removeCoin(user, 5)
     return post
 }
 
@@ -111,7 +111,7 @@ exports.likePost = async function likePost(user, id) {
         return { error: 'Impossible de liker le post' }
     })
     if (!post) return { error: 'Post not found' }
-    addCoin(user, coinToChange)
+    await addCoin(user, coinToChange)
     return post
 }
 
@@ -150,6 +150,6 @@ exports.dislikePost = async function dislikePost(user, id) {
         return { error: 'Impossible de disliker le post' }
     })
     if (!post) return { error: 'Post not found' }
-    addCoin(user, coinToChange)
+    await addCoin(user, coinToChange)
     return post
 }

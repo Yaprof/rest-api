@@ -38,24 +38,21 @@ exports.addCoin = async function addCoin(user, coin) {
 
 exports.removeCoin = async function removeCoin(user, coin) {
     if (!user || coin == undefined) return { error: 'Arguments manquants' }
-    user = await prisma.profile.findUnique({
-        where: { userId: parseInt(user.id) },
-    }).catch(e => {
-        return { error: 'Impossible de trouver le profil' }
-    })
     console.log("first user", user)
     if (!user) return { error: 'User not found' }
-    if (user.coins < coin) coin = user.coins
+    if (user.profile.coins < coin) coin = user.profile.coins
     let data = {
         coins: {
             decrement: parseInt(coin)
         }
     }
+    console.log(data)
 
     user = await prisma.profile.update({
         where: { userId: parseInt(user.id) },
         data,
     }).catch(e => {
+        console.log(e)
         return { error: 'Impossible de retirer des coins' }
     })
     console.log(user, coin)
