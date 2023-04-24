@@ -73,7 +73,7 @@ exports.deletePost =  async function deletePost(user, id) {
     })
     if (!post) return { error: 'Post introuvable' }
     if (post.authorId == user.id && (post.likedBy.length < 3 && post.dislikedBy.length < 3)) {
-        if (post.likedBy.find(u => u.id == user.id)) await removeCoin(user, 6)
+        if (post.likedBy.find(u => u.id == user.id) && post.dislikedBy.find(u => u.id == user.id)) await removeCoin(user, 6)
         else await removeCoin(user, 5)
     }
     return post
