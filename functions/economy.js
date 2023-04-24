@@ -24,7 +24,7 @@ exports.addCoin = async function addCoin(user, coin) {
             increment: parseInt(coin)
         }
     }
-    if ((user.profile.coins + parseInt(coin)) < 0) user = await removeCoin(user, user.profile.coins)
+    if ((user.profile.coins + parseInt(coin)) < 0) user = await this.removeCoin(user, user.profile.coins)
     user = await prisma.profile.update({
         where: { userId: parseInt(user.id) },
         data,
