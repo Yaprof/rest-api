@@ -29,7 +29,9 @@ exports.createPost = async function createPost(user, pointer, content, date) {
         let profPosts = findProfPost?.posts?.filter(post => moment(post.createdAt).date() == moment(date).date())
         if (profPosts.length > 0) return { error: 'Prof déjà signalé ce jour' }
     }
-    
+
+    if (!['Autre', 'Grève', 'Maladie', 'Réunion', 'Sortie pédagogique'].includes(content)) return { error: 'Raison invalide' }
+
     const post = await prisma.post.create({
         data: {
             content: content,
@@ -70,7 +72,10 @@ exports.deletePost =  async function deletePost(user, id) {
         return { error: 'Impossible de supprimer le post' }
     })
     if (!post) return { error: 'Post introuvable' }
-    if (post.authorId == user.id && (post.likedBy.length < 3 && post.dislikedBy.length < 3)) await removeCoin(user, 5)
+    if (post.authorId == user.id && (post.likedBy.length < 3 && post.dislikedBy.length < 3)) {
+        if (post.likedBy.find(u => u.id == user.id)) await removeCoin(user, 6)
+        else await removeCoin(user, 5)
+    }
     return post
 }
 
