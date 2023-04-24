@@ -31,14 +31,14 @@ exports.createPost = async function createPost(user, pointer, content, date) {
         let profPosts = findProfPost?.posts?.filter(post => moment(post.createdAt).date() == moment(date).date())
         if (profPosts.length > 0) return { error: 'Prof déjà signalé ce jour' }
     }
-
+    
     const post = await prisma.post.create({
         data: {
             content: content,
             published: true,
             author: { connect: { id: parseInt(user.id) } },
             establishment: user.establishment,
-            createdAt: date.toISOString(),
+            createdAt: date instanceof Date ? date.toISOString() : new Date().toISOString(),
             pointer: {
                 connectOrCreate: {
                     where: {
