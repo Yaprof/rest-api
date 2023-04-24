@@ -4,11 +4,9 @@ const moment = require('moment')
 const { addCoin, removeCoin } = require('./economy')
 
 exports.createPost = async function createPost(user, pointer, content, date) {
-    console.log(user.id, pointer, content, date)
     if (!pointer || !content || !user || !date) return { error: 'Arguments manquants' }
-    console.log(pointer)
     if (!pointer.name || pointer.subject == undefined) return { error: 'Prof incorrect' }
-    console.log(pointer)
+    if (![50, 99].includes(user.role) && user.posts.filter(post => (new Date(post.createdAt).getFullYear()+'-'+new Date(post.createdAt).getDate()+'-'+(new Date(post.createdAt).getMonth()+1)) == (new Date().getFullYear()+'-'+new Date().getDate()+'-'+(new Date().getMonth()+1))).length > 4) return { error: "Vous avez déjà posté 5 messages aujourd'hui"}
 
     let colors = ['#FF2D00', '#FF9500', '#FFCC00', '#4CD964', '#5AC8FA', '#007AFF', '#5856D6', '#FF2D55', '#8E8E93']
     if (date == 'today') date = moment()
