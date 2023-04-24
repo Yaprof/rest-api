@@ -17,25 +17,6 @@ exports.setCoin = async function setCoin(user, coin) {
     return user
 }
 
-exports.addCoin = async function addCoin(user, coin) {
-    if (!user || coin == undefined) return { error: 'Arguments manquants' }
-    let data = {
-        coins: {
-            increment: parseInt(coin)
-        }
-    }
-    if ((user.profile.coins + parseInt(coin)) < 0) user = await this.removeCoin(user, user.profile.coins)
-    user = await prisma.profile.update({
-        where: { userId: parseInt(user.id) },
-        data,
-    }).catch(e => {
-        return { error: 'Impossible d\'ajouter des coins' }
-    })
-    console.log(user)
-    if (!user) return { error: 'User not found' }
-    return user
-}
-
 exports.removeCoin = async function removeCoin(user, coin) {
     if (!user || coin == undefined) return { error: 'Arguments manquants' }
     console.log("first user", user)
@@ -56,6 +37,26 @@ exports.removeCoin = async function removeCoin(user, coin) {
         return { error: 'Impossible de retirer des coins' }
     })
     console.log(user, coin)
+    if (!user) return { error: 'User not found' }
+    return user
+}
+
+
+exports.addCoin = async function addCoin(user, coin) {
+    if (!user || coin == undefined) return { error: 'Arguments manquants' }
+    let data = {
+        coins: {
+            increment: parseInt(coin)
+        }
+    }
+    if ((user.profile.coins + parseInt(coin)) < 0) user = await removeCoin(user, user.profile.coins)
+    user = await prisma.profile.update({
+        where: { userId: parseInt(user.id) },
+        data,
+    }).catch(e => {
+        return { error: 'Impossible d\'ajouter des coins' }
+    })
+    console.log(user)
     if (!user) return { error: 'User not found' }
     return user
 }
