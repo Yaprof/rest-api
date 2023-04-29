@@ -52,6 +52,5 @@ model Prof {
   name     String? @unique
   subject  String?
   color    String?
-  absences Int     @default(0)
   posts    Post[]  @relation("pointer")
 }

@@ -39,7 +39,9 @@ app.use(express.urlencoded({limit: '50mb'}))
 app.get('/feed/:userId', isTokenValid, async (req, res) => {
     console.log(req.body)
     if (!req.params.userId) return res.json({ error: 'Arguments manquants' })
-    let user = await getUser(req.body.userId)
+    let JWTUser = jwt.verify(req.query.userInfos, process.env.JSON_WEB_TOKEN)
+    if (!JWTUser) return res.json({ error: 'User introuvable' })
+    let user = await getUserByName(JWTUser.name)
     if (!user) return res.json({ error: 'User introuvable' })
     let posts = await getUserFeed(user, req.params.userId)
     res.json(posts)
@@ -161,11 +163,12 @@ app.post('/login', async (req, res) => {
 })
 
 app.post('/getInfos', isTokenValid, async (req, res) => {
-    console.log('getInfos')
+    
     let token = jwt.verify(req.headers['authorization'], process.env.JSON_WEB_TOKEN)
     if (!token || !token.token) return res.json({ error: 'Token invalide' })
     let infos = await getInfos(token.token)
     if (!infos) return res.json({ error: 'Impossible de récupérer les informations' })
+    console.log('getInfos', infos)
     res.json(infos)
 })
 
