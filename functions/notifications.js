@@ -27,19 +27,19 @@ exports.registerSubscription = async function registerSubscription(user, subscri
         {
             title: 'Abonnement aux notifications',
             body: 'Vous êtes maintenant abonné aux notifications',
-            icon: './assets/icon_512x512.png',
-            badge: './assets/icon_512x512.png',
-            image: './assets/icon_512x512.png',
+            icon: '../assets/icon_512x512.png',
             vibrate: [100, 50, 100],
             actions: [
                 {
-                    action: 'explore', title: 'Aller sur le site',
-                    icon: './assets/icon_512x512.png'
+                    action: 'explore', title: 'Aller sur l\'app',
+                    icon: '../assets/icon_512x512.png'
                 },
             ]
 
         }
-    ))
+    )).catch(e => {
+        console.log(e)
+    })
     console.log('Notification sent')
     return notification
 }
