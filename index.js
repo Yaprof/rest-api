@@ -5,11 +5,13 @@ var cors = require('cors')
 const moment = require('moment')
 const jwt = require('jsonwebtoken');
 const dotenv = require('dotenv');
+const webpush = require('web-push');
 
 const { getUser, createUser, getUserFeed, updateUser, getUserByName, getUsers } = require('./functions/user')
 const { getPost, createPost, deletePost, likePost, dislikePost } = require('./functions/post')
 const { generateToken, getInfos, getRecipients, getEntUrl } = require('./functions/auth')
 const { getAllBadges, buyBadge, updatebadges } = require('./functions/badges')
+const { getSubscription, registerSubscription } = require('./functions/notifications')
 
 const isTokenValid = require('./middleware/tokenValid').default
 const isAdmin = require('./middleware/isAdmin').default
@@ -22,6 +24,12 @@ cloudinary.config({
   api_key: "735232399657949",
   api_secret: "gTftni7_kDNTj2i8gzU9wNtQRO4"
 });
+
+webpush.setVapidDetails(
+    'mailto:yaprof.app@gmail.com',
+    process.env.VAPID_PUBLIC_KEY,
+    process.env.VAPID_PRIVATE_KEY
+);
 
 moment.locale('fr')
 dotenv.config();
@@ -216,7 +224,33 @@ app.put('/badge/:id', isTokenValid, async (req, res) => {
     let badge = await buyBadge(user, req.params.id)
     if (!badge) return res.json({ error: 'Impossible de modifier le badge' })
     res.json(badge)
- })
+})
+
+
+/// NOTIFICATIONS
+
+app.get('/push/key', isTokenValid, async (req, res) => {
+    let token = jwt.verify(req.headers['authorization'], process.env.JSON_WEB_TOKEN)
+    if (!token || !token.token) return res.json({ error: 'Token invalide' })
+    const vapidPublicKey = process.env.VAPID_PUBLIC_KEY
+    if (!vapidPublicKey) return res.json({ error: 'Impossible de récupérer la clé' })
+    res.json(vapidPublicKey)
+})
+
+app.post('/push/register', isTokenValid, async (req, res) => {
+    let token = jwt.verify(req.headers['authorization'], process.env.JSON_WEB_TOKEN)
+    if (!token || !token.token || !req.body.body.endpoint) return res.json({ error: 'Token invalide' })
+    let user = jwt.verify(req.query.userInfos, process.env.JSON_WEB_TOKEN)
+    if (!user) return res.json({ error: 'Token invalide' })
+    let subscription = req.body.body
+    console.log(req.body.body)
+    if (!subscription.endpoint) return res.json({ error: 'Arguments manquants' })
+    let currentSubscription = await getSubscription(user)
+    if (currentSubscription) return res.json({ error: 'Vous êtes déjà inscrit aux notifications' })
+    let newSubscription = await registerSubscription(user, subscription)
+    if (!newSubscription) return res.json({ error: 'Impossible de mettre à jour la souscription' })
+    res.json(newSubscription)
+})
 
 
 const server = app.listen(8080)
