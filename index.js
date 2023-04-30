@@ -48,7 +48,7 @@ app.use(express.urlencoded({limit: '50mb'}))
 
 app.get('/feed/:userId', [rateLimit, isToken], async (req, res) => {
     const ip = req.headers['x-forwarded-for'];
-    console.log("⏰ \x1b[90m"+moment(new Date).format('DD/MM/YYYY HH:mm:ss')+'\x1b[0m \x1b[43m[GET]\x1b[0m', '\x1b[34m/feed/:userId\x1b[0m => ' + ip)
+    console.log("⏰ \x1b[90m"+moment(new Date).format('DD/MM/YYYY HH:mm:ss')+'\x1b[0m \x1b[43m[GET]\x1b[0m', '\x1b[34m/feed/:userId\x1b[0m => ' + req.headers['x-forwarded-for'].split(',')[0])
     if (!req.params.userId) return res.json({ error: 'Arguments manquants' })
     let JWTUser = jwt.verify(req.query.userInfos, process.env.JSON_WEB_TOKEN)
     if (!JWTUser) return res.json({ error: 'User introuvable' })
@@ -59,7 +59,7 @@ app.get('/feed/:userId', [rateLimit, isToken], async (req, res) => {
 })
 
 app.post('/post', [rateLimit, isToken], async (req, res, next) => {
-    console.log("⏰ \x1b[90m"+moment(new Date).format('DD/MM/YYYY HH:mm:ss')+'\x1b[0m \x1b[43m[POST]\x1b[0m', '\x1b[34m/post\x1b[0m => ' + req.ip)
+    console.log("⏰ \x1b[90m"+moment(new Date).format('DD/MM/YYYY HH:mm:ss')+'\x1b[0m \x1b[43m[POST]\x1b[0m', '\x1b[34m/post\x1b[0m => ' + req.headers['x-forwarded-for'].split(',')[0])
     let { pointer, content, date } = req.body
     if (!pointer || !content || !date) return res.json({ error: 'Arguments manquants' })
     let user = await getUserByName(jwt.verify(req.query.userInfos, process.env.JSON_WEB_TOKEN).name)
@@ -69,7 +69,7 @@ app.post('/post', [rateLimit, isToken], async (req, res, next) => {
 })
 
 app.delete('/post/:id', [rateLimit, isToken], async (req, res) => {
-    console.log("⏰ \x1b[90m"+moment(new Date).format('DD/MM/YYYY HH:mm:ss')+'\x1b[0m \x1b[43m[DELETE]\x1b[0m', '\x1b[34m/post/:id\x1b[0m => ' + req.ip)
+    console.log("⏰ \x1b[90m"+moment(new Date).format('DD/MM/YYYY HH:mm:ss')+'\x1b[0m \x1b[43m[DELETE]\x1b[0m', '\x1b[34m/post/:id\x1b[0m => ' + req.headers['x-forwarded-for'].split(',')[0])
     const { id } = req.params
     if (!id) return res.json({ error: 'Arguments manquants' })
     let user = await getUserByName(jwt.verify(req.query.userInfos, process.env.JSON_WEB_TOKEN).name)
@@ -79,7 +79,7 @@ app.delete('/post/:id', [rateLimit, isToken], async (req, res) => {
 })
 
 app.post('/post/:id/like', [rateLimit, isToken], async (req, res) => {
-    console.log("⏰ \x1b[90m"+moment(new Date).format('DD/MM/YYYY HH:mm:ss')+'\x1b[0m \x1b[43m[POST]\x1b[0m', '\x1b[34m/post/:id/like\x1b[0m => ' + req.ip)
+    console.log("⏰ \x1b[90m"+moment(new Date).format('DD/MM/YYYY HH:mm:ss')+'\x1b[0m \x1b[43m[POST]\x1b[0m', '\x1b[34m/post/:id/like\x1b[0m => ' + req.headers['x-forwarded-for'].split(',')[0])
     if (!req.params.id) return res.json({ error: 'Arguments manquants' })
     let user = await getUserByName(jwt.verify(req.query.userInfos, process.env.JSON_WEB_TOKEN).name)
     if (!user) return res.json({ error: 'User introuvable' })
@@ -88,7 +88,7 @@ app.post('/post/:id/like', [rateLimit, isToken], async (req, res) => {
 })
 
 app.post('/post/:id/dislike', [rateLimit, isToken], async (req, res) => {
-    console.log("⏰ \x1b[90m"+moment(new Date).format('DD/MM/YYYY HH:mm:ss')+'\x1b[0m \x1b[43m[POST]\x1b[0m', '\x1b[34m/post/:id/dislike\x1b[0m => ' + req.ip)
+    console.log("⏰ \x1b[90m"+moment(new Date).format('DD/MM/YYYY HH:mm:ss')+'\x1b[0m \x1b[43m[POST]\x1b[0m', '\x1b[34m/post/:id/dislike\x1b[0m => ' + req.headers['x-forwarded-for'].split(',')[0])
     if (!req.params.id) return res.json({ error: 'Arguments manquants' })
     let user = await getUserByName(jwt.verify(req.query.userInfos, process.env.JSON_WEB_TOKEN).name)
     if (!user) return res.json({ error: 'User introuvable' })
@@ -97,21 +97,21 @@ app.post('/post/:id/dislike', [rateLimit, isToken], async (req, res) => {
 })
 
 app.post('/user/create', [rateLimit, isToken], async (req, res) => {
-    console.log("⏰ \x1b[90m"+moment(new Date).format('DD/MM/YYYY HH:mm:ss')+'\x1b[0m \x1b[43m[POST]\x1b[0m', '\x1b[34m/user/create\x1b[0m => ' + req.ip)
+    console.log("⏰ \x1b[90m"+moment(new Date).format('DD/MM/YYYY HH:mm:ss')+'\x1b[0m \x1b[43m[POST]\x1b[0m', '\x1b[34m/user/create\x1b[0m => ' + req.headers['x-forwarded-for'].split(',')[0])
     if (!req.body.body.name || !req.body.body.class || !req.body.body.etab || !req.body.body.pp) return res.json({ error: 'Arguments manquants' })
     let user = await createUser(req.body.body.name, req.body.body.class, req.body.body.etab, req.body.body.pp, req.body.body.role)
     res.json(user)
 })
 
 app.post('/user/update', [rateLimit, isToken], async (req, res) => {
-    console.log("⏰ \x1b[90m"+moment(new Date).format('DD/MM/YYYY HH:mm:ss')+'\x1b[0m \x1b[43m[POST]\x1b[0m', '\x1b[34m/user/update\x1b[0m => ' + req.ip)
+    console.log("⏰ \x1b[90m"+moment(new Date).format('DD/MM/YYYY HH:mm:ss')+'\x1b[0m \x1b[43m[POST]\x1b[0m', '\x1b[34m/user/update\x1b[0m => ' + req.headers['x-forwarded-for'].split(',')[0])
     let userName = await getUserByName(jwt.verify(req.query.userInfos, process.env.JSON_WEB_TOKEN).name)
     let user = await updateUser(userName, userName.id, req.body.body.name, req.body.body.pp, req.body.body.class, req.body.body.etab, req.body.body.role)
     res.json(user)
 })
 
 app.get('/user', [rateLimit, isToken], async (req, res) => {
-    console.log("⏰ \x1b[90m"+moment(new Date).format('DD/MM/YYYY HH:mm:ss')+'\x1b[0m \x1b[43m[GET]\x1b[0m', '\x1b[34m/user\x1b[0m => ' + req.ip)
+    console.log("⏰ \x1b[90m"+moment(new Date).format('DD/MM/YYYY HH:mm:ss')+'\x1b[0m \x1b[43m[GET]\x1b[0m', '\x1b[34m/user\x1b[0m => ' + req.headers['x-forwarded-for'].split(',')[0])
     if (!req.query?.userInfos) return res.json({ error: 'Userinfos invalide' })
     let userbyName = await getUserByName(jwt.verify(req.query.userInfos, process.env.JSON_WEB_TOKEN).name)
     if (!userbyName) return res.json({ error: 'User introuvable' })
@@ -120,7 +120,7 @@ app.get('/user', [rateLimit, isToken], async (req, res) => {
 })
 
 app.get('/user/:id', [rateLimit, isToken], async (req, res) => {
-    console.log("⏰ \x1b[90m"+moment(new Date).format('DD/MM/YYYY HH:mm:ss')+'\x1b[0m \x1b[43m[GET]\x1b[0m', '\x1b[34m/user/:id\x1b[0m => ' + req.ip)
+    console.log("⏰ \x1b[90m"+moment(new Date).format('DD/MM/YYYY HH:mm:ss')+'\x1b[0m \x1b[43m[GET]\x1b[0m', '\x1b[34m/user/:id\x1b[0m => ' + req.headers['x-forwarded-for'].split(',')[0])
     if (!req.params.id) return res.json({ error: 'Arguments invalides' })
     let user = await getUser(req.params.id)
     if (!user) return res.json({ error: 'User introuvable' })
@@ -128,14 +128,14 @@ app.get('/user/:id', [rateLimit, isToken], async (req, res) => {
 })
 
 app.delete('/user/:id', [rateLimit, isToken], async (req, res) => {
-    console.log("⏰ \x1b[90m"+moment(new Date).format('DD/MM/YYYY HH:mm:ss')+'\x1b[0m \x1b[43m[DELETE]\x1b[0m', '\x1b[34m/user/:id\x1b[0m => ' + req.ip)
+    console.log("⏰ \x1b[90m"+moment(new Date).format('DD/MM/YYYY HH:mm:ss')+'\x1b[0m \x1b[43m[DELETE]\x1b[0m', '\x1b[34m/user/:id\x1b[0m => ' + req.headers['x-forwarded-for'].split(',')[0])
     if (!req.params.id || !req.body.user) return res.json({ error: 'Arguments manquants' })
     let user = await deleteUser(req.body.user, req.params.id)
     res.json(user)
 })
 
 app.post('/generatetoken', [rateLimit], async (req, res) => {
-    console.log("⏰ \x1b[90m"+moment(new Date).format('DD/MM/YYYY HH:mm:ss')+'\x1b[0m \x1b[43m[POST]\x1b[0m', '\x1b[34m/generatetoken\x1b[0m => ' + req.ip)
+    console.log("⏰ \x1b[90m"+moment(new Date).format('DD/MM/YYYY HH:mm:ss')+'\x1b[0m \x1b[43m[POST]\x1b[0m', '\x1b[34m/generatetoken\x1b[0m => ' + req.headers['x-forwarded-for'].split(',')[0])
     let { url, username, password, ent } = req.body
     if (!url || !username || !password || !ent) return res.json({ error: 'Arguments manquants' })
     let token = await generateToken(url, username, password, ent)
@@ -153,7 +153,7 @@ app.post('/generatetoken', [rateLimit], async (req, res) => {
 })
 
 app.post('/login', [rateLimit], async (req, res) => {
-    console.log("⏰ \x1b[90m"+moment(new Date).format('DD/MM/YYYY HH:mm:ss')+'\x1b[0m \x1b[43m[POST]\x1b[0m', '\x1b[34m/login\x1b[0m => ' + req.ip)
+    console.log("⏰ \x1b[90m"+moment(new Date).format('DD/MM/YYYY HH:mm:ss')+'\x1b[0m \x1b[43m[POST]\x1b[0m', '\x1b[34m/login\x1b[0m => ' + req.headers['x-forwarded-for'].split(',')[0])
     let { username, password, ent_url } = req.body
     if (!username || !password || !ent_url) return res.json({ error: 'Arguments manquants' })
     let geturl = await getEntUrl(ent_url)
@@ -178,7 +178,7 @@ app.post('/login', [rateLimit], async (req, res) => {
 })
 
 app.post('/getInfos', [rateLimit, isTokenValid], async (req, res) => {
-    console.log("⏰ \x1b[90m"+moment(new Date).format('DD/MM/YYYY HH:mm:ss')+'\x1b[0m \x1b[43m[POST]\x1b[0m', '\x1b[34m/getInfos\x1b[0m => ' + req.ip)
+    console.log("⏰ \x1b[90m"+moment(new Date).format('DD/MM/YYYY HH:mm:ss')+'\x1b[0m \x1b[43m[POST]\x1b[0m', '\x1b[34m/getInfos\x1b[0m => ' + req.headers['x-forwarded-for'].split(',')[0])
     let token = jwt.verify(req.headers['authorization'], process.env.JSON_WEB_TOKEN)
     if (!token || !token.token) return res.json({ error: 'Token invalide' })
     let infos = await getInfos(token.token)
@@ -187,7 +187,7 @@ app.post('/getInfos', [rateLimit, isTokenValid], async (req, res) => {
 })
 
 app.get('/recipients', [rateLimit, isTokenValid], async (req, res) => {
-    console.log("⏰ \x1b[90m" + moment(new Date).format('DD/MM/YYYY HH:mm:ss') + '\x1b[0m \x1b[43m[GET]\x1b[0m', '\x1b[34m/recipients\x1b[0m => ' + req.ip)
+    console.log("⏰ \x1b[90m" + moment(new Date).format('DD/MM/YYYY HH:mm:ss') + '\x1b[0m \x1b[43m[GET]\x1b[0m', '\x1b[34m/recipients\x1b[0m => ' + req.headers['x-forwarded-for'].split(',')[0])
     let token = jwt.verify(req.headers['authorization'], process.env.JSON_WEB_TOKEN)
     if (!token || !token.token) return res.json({ error: 'Token invalide' })
     let recipients = await getRecipients(token.token)
@@ -196,14 +196,14 @@ app.get('/recipients', [rateLimit, isTokenValid], async (req, res) => {
 })
 
 app.get('/admin/users', [rateLimit, isAdmin], async (req, res) => {
-    console.log("⏰ \x1b[90m"+moment(new Date).format('DD/MM/YYYY HH:mm:ss')+'\x1b[0m \x1b[43m[GET]\x1b[0m', '\x1b[34m/admin/users\x1b[0m => ' + req.ip)
+    console.log("⏰ \x1b[90m"+moment(new Date).format('DD/MM/YYYY HH:mm:ss')+'\x1b[0m \x1b[43m[GET]\x1b[0m', '\x1b[34m/admin/users\x1b[0m => ' + req.headers['x-forwarded-for'].split(',')[0])
     let users = await getUsers()
     if (!users) return res.json({ error: 'Impossible de récupérer les utilisateurs' })
     res.json(users)
 })
 
 app.get('/badges', [rateLimit, isToken], async (req, res) => {
-    console.log("⏰ \x1b[90m"+moment(new Date).format('DD/MM/YYYY HH:mm:ss')+'\x1b[0m \x1b[43m[GET]\x1b[0m', '\x1b[34m/badges\x1b[0m => ' + req.ip)
+    console.log("⏰ \x1b[90m"+moment(new Date).format('DD/MM/YYYY HH:mm:ss')+'\x1b[0m \x1b[43m[GET]\x1b[0m', '\x1b[34m/badges\x1b[0m => ' + req.headers['x-forwarded-for'].split(',')[0])
     let token = jwt.verify(req.headers['authorization'], process.env.JSON_WEB_TOKEN)
     if (!token || !token.token) return res.json({ error: 'Token invalide' })
     let badges = await getAllBadges()
@@ -212,7 +212,7 @@ app.get('/badges', [rateLimit, isToken], async (req, res) => {
 })
 
 app.post('/badges/:id', [rateLimit, isToken], async (req, res) => {
-    console.log("⏰ \x1b[90m"+moment(new Date).format('DD/MM/YYYY HH:mm:ss')+'\x1b[0m \x1b[43m[POST]\x1b[0m', '\x1b[34m/badges/:id\x1b[0m => ' + req.ip)
+    console.log("⏰ \x1b[90m"+moment(new Date).format('DD/MM/YYYY HH:mm:ss')+'\x1b[0m \x1b[43m[POST]\x1b[0m', '\x1b[34m/badges/:id\x1b[0m => ' + req.headers['x-forwarded-for'].split(',')[0])
     let token = jwt.verify(req.headers['authorization'], process.env.JSON_WEB_TOKEN)
     if (!token || !token.token) return res.json({ error: 'Token invalide' })
     let user = jwt.verify(req.query.userInfos, process.env.JSON_WEB_TOKEN)
@@ -227,7 +227,7 @@ app.post('/badges/:id', [rateLimit, isToken], async (req, res) => {
 
 
 app.put('/badge/:id', [rateLimit, isToken], async (req, res) => {
-    console.log("⏰ \x1b[90m"+moment(new Date).format('DD/MM/YYYY HH:mm:ss')+'\x1b[0m \x1b[43m[PUT]\x1b[0m', '\x1b[34m/badges/:id\x1b[0m => ' + req.ip)
+    console.log("⏰ \x1b[90m"+moment(new Date).format('DD/MM/YYYY HH:mm:ss')+'\x1b[0m \x1b[43m[PUT]\x1b[0m', '\x1b[34m/badges/:id\x1b[0m => ' + req.headers['x-forwarded-for'].split(',')[0])
     let token = jwt.verify(req.headers['authorization'], process.env.JSON_WEB_TOKEN)
     if (!token || !token.token) return res.json({ error: 'Token invalide' })
     let user = jwt.verify(req.query.userInfos, process.env.JSON_WEB_TOKEN)
@@ -241,7 +241,7 @@ app.put('/badge/:id', [rateLimit, isToken], async (req, res) => {
 /// NOTIFICATIONS
 
 app.get('/push/key', [rateLimit, isToken], async (req, res) => {
-    console.log("⏰ \x1b[90m"+moment(new Date).format('DD/MM/YYYY HH:mm:ss')+'\x1b[0m \x1b[43m[GET]\x1b[0m', '\x1b[34m/push/key\x1b[0m => ' + req.ip)
+    console.log("⏰ \x1b[90m"+moment(new Date).format('DD/MM/YYYY HH:mm:ss')+'\x1b[0m \x1b[43m[GET]\x1b[0m', '\x1b[34m/push/key\x1b[0m => ' + req.headers['x-forwarded-for'].split(',')[0])
     let token = jwt.verify(req.headers['authorization'], process.env.JSON_WEB_TOKEN)
     if (!token || !token.token) return res.json({ error: 'Token invalide' })
     const vapidPublicKey = process.env.VAPID_PUBLIC_KEY
@@ -250,7 +250,7 @@ app.get('/push/key', [rateLimit, isToken], async (req, res) => {
 })
 
 app.post('/push/register', [rateLimit, isToken], async (req, res) => {
-    console.log("⏰ \x1b[90m"+moment(new Date).format('DD/MM/YYYY HH:mm:ss')+'\x1b[0m \x1b[43m[POST]\x1b[0m', '\x1b[34m/push/register\x1b[0m => ' + req.ip)
+    console.log("⏰ \x1b[90m"+moment(new Date).format('DD/MM/YYYY HH:mm:ss')+'\x1b[0m \x1b[43m[POST]\x1b[0m', '\x1b[34m/push/register\x1b[0m => ' + req.headers['x-forwarded-for'].split(',')[0])
     let token = jwt.verify(req.headers['authorization'], process.env.JSON_WEB_TOKEN)
     if (!token || !token.token || !req.body.body.endpoint) return res.json({ error: 'Token invalide' })
     let user = jwt.verify(req.query.userInfos, process.env.JSON_WEB_TOKEN)
