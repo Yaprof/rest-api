@@ -2,6 +2,7 @@ const { PrismaClient } = require('@prisma/client')
 const prisma = new PrismaClient()
 const moment = require('moment')
 const { addCoin, removeCoin } = require('./economy')
+const webpush = require('web-push');
 
 exports.createPost = async function createPost(user, pointer, content, date) {
     if (!pointer || !content || !user || !date) return { error: 'Arguments manquants' }
@@ -55,6 +56,49 @@ exports.createPost = async function createPost(user, pointer, content, date) {
     }).catch(e => { return { error: "Impossible de créer le post" } })
 
     await addCoin(user, 5)
+
+    let notifications = await prisma.notification.findMany({
+        where: {
+            establishment: user.establishment,
+            role: {
+                in: [50, 99]
+            },
+            userId: {
+                notIn: [user.id]
+            }
+        }
+    }).catch(e => {
+        return { error: 'Impossible de trouver les notifications' }
+    })
+
+    for (let i = 0; i < notifications.length; i++) {
+        const notification = notifications[i];
+        let subscription = {
+            endpoint: notification.endpoint,
+            keys: {
+                auth: notification.auth_token,
+                p256dh: notification.public_key
+            }
+        }
+
+        webpush.sendNotification(subscription, JSON.stringify(
+            {
+                title: 'Nouveau signalement',
+                body: `${user.name} a signalé ${pointer.name} (${content.toLowerCase()}) pour ${date == 'today' ? 'aujourd\'hui' : date == 'tomorrow' ? 'demain' : date == 'next_tomorrow' ? 'après-demain' : date == 'next_next_tomorrow' ? 'dans 3 jours' : 'le ' + moment(date).format('DD/MM/YYYY')}`,
+                icon: '../assets/icon_512x512.png',
+                vibrate: [100, 50, 100],
+                actions: [
+                    {
+                        action: 'explore', title: 'Aller sur l\'app',
+                        icon: '../assets/icon_512x512.png'
+                    },
+                ]
+
+            }
+        )).catch(e => {
+            console.log(e)
+        })
+    }
     return post
 }
 

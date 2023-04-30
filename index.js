@@ -171,7 +171,6 @@ app.post('/login', async (req, res) => {
 })
 
 app.post('/getInfos', isTokenValid, async (req, res) => {
-    
     let token = jwt.verify(req.headers['authorization'], process.env.JSON_WEB_TOKEN)
     if (!token || !token.token) return res.json({ error: 'Token invalide' })
     let infos = await getInfos(token.token)
