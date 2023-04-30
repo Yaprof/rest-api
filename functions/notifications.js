@@ -25,7 +25,7 @@ exports.registerSubscription = async function registerSubscription(user, subscri
     if (!notification) return { error: 'Impossible de d\'abonner aux notifs' }
     webpush.sendNotification(subscription, JSON.stringify(
         {
-            title: 'Abonnement',
+            title: 'Abonnement aux notifications',
             body: 'Vous êtes maintenant abonné aux notifications 🎉',
             icon: '../assets/icon_512x512.png',
             vibrate: [100, 50, 100],
