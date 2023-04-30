@@ -26,7 +26,6 @@ exports.generateToken = async function generateToken(url, username, password, et
 }
 
 exports.getInfos = async function getInfos(token) {
-    console.log(token)
     let response = await axios.get(process.env.PRONOTE_API + "/user?token="+token, {
         headers: {
             'Accept': 'application/json',

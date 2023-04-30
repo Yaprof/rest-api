@@ -22,7 +22,6 @@ exports.default = async function isToken(req, res, next) {
         req.headers['authorization'] = jwt.sign({ token: verified?.token }, process.env.JSON_WEB_TOKEN)
         next()
     } catch (err) {
-        console.log(err)
         res.status(400).send('Invalid token')
     }
    

@@ -20,7 +20,6 @@ exports.default = async function isTokenValid(req, res, next) {
         if (![50, 99].includes(user.role)) return res.status(403).send('Access denied')
         next()
     } catch (err) {
-        console.log(err)
         res.status(400).send('Invalid token')
     }
 }
