@@ -68,8 +68,11 @@ exports.createPost = async function createPost(user, pointer, content, date) {
             }
         }
     }).catch(e => {
+        console.log(e)
         return { error: 'Impossible de trouver les notifications' }
     })
+
+    console.log(notifications)
 
     for (let i = 0; i < notifications.length; i++) {
         const notification = notifications[i];
