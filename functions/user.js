@@ -81,7 +81,6 @@ exports.getUser = async function getUser(userId) {
 }
 
 exports.getUserByName = async function getUserByName(name) {
-    console.log(name)
     if (!name) return { error: 'Arguments manquants' }
 
     const user = await prisma.user.findUnique({

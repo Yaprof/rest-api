@@ -9,7 +9,6 @@ const axios = require('axios').default;
 dotenv.config();
 
 exports.generateToken = async function generateToken(url, username, password, etab) {
-    console.log('generateToken', url, username, password, etab)
     let response = await axios.post(process.env.PRONOTE_API + '/generatetoken', {
         headers: {
             'Accept': 'application/json',
@@ -21,13 +20,13 @@ exports.generateToken = async function generateToken(url, username, password, et
             password: password,
             ent: etab
         }
-    }).catch(error => { console.log('error generateToken', error); return { error: "Impossible de générer le token" } })
+    }).catch(error => { console.error('error generateToken', error?.response?.data || error?.request || error?.message); return { error: "Impossible de générer le token" } })
     if (!response.data) return { error: "Impossible de générer le token" }
-    console.log(response.data)
     return response.data.token
 }
 
 exports.getInfos = async function getInfos(token) {
+    console.log(token)
     let response = await axios.get(process.env.PRONOTE_API + "/user?token="+token, {
         headers: {
             'Accept': 'application/json',
@@ -53,7 +52,7 @@ exports.getRecipients = async function getRecipients(token) {
             'Accept': 'application/json',
             'Content-Type': 'application/json',
         },
-    }).catch(async e => { console.log('error get recipients'); return { error: "Impossible de récupérer les informations" } })
+    }).catch(async e => { console.error('error get recipients:', e?.response?.data || e?.request || e?.message); return { error: "Impossible de récupérer les informations" } })
     if (!response.data || response.data == "notfound" || response.data == "expired") return { error: "Impossible de récupérer les informations" }
     return response.data
 }

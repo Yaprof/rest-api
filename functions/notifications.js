@@ -4,7 +4,6 @@ const { getUserByName } = require('./user');
 const prisma = new PrismaClient()
 
 exports.registerSubscription = async function registerSubscription(user, subscription) {
-    console.log(user, subscription)
     if (!user || !subscription) return { error: 'Arguments manquants' }
 
     let data = {
@@ -39,7 +38,6 @@ exports.registerSubscription = async function registerSubscription(user, subscri
     )).catch(e => {
         console.log(e)
     })
-    console.log('Notification sent')
     return notification
 }
 

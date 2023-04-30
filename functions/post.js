@@ -79,7 +79,6 @@ exports.createPost = async function createPost(user, pointer, content, date) {
             return { error: 'Impossible de trouver l\'utilisateur' }
         })
         notifications = notifications.filter(n => n.establishment != user.establishment || n.userId != notifUser.id || n.endpoint != notifUser.endpoint)
-        console.log(notifications)
         const notification = notifications[i];
         let subscription = {
             endpoint: notification.endpoint,

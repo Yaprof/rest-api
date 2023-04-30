@@ -15,6 +15,8 @@ const { getSubscription, registerSubscription } = require('./functions/notificat
 
 const isTokenValid = require('./middleware/tokenValid').default
 const isAdmin = require('./middleware/isAdmin').default
+const isToken = require('./middleware/isToken').default
+const rateLimit = require('./middleware/rateLimit').default
 
 const cloudinary = require('cloudinary').v2;
 
@@ -44,8 +46,8 @@ app.use(cors({ origin: true, credentials: true }));
 app.use(express.json({limit: '50mb'}))
 app.use(express.urlencoded({limit: '50mb'}))
 
-app.get('/feed/:userId', isTokenValid, async (req, res) => {
-    console.log(req.body)
+app.get('/feed/:userId', [rateLimit, isToken], async (req, res) => {
+    console.log("⏰ \x1b[90m"+moment(new Date).format('DD/MM/YYYY HH:mm:ss')+'\x1b[0m \x1b[43m[GET]\x1b[0m', '\x1b[34m/feed/:userId\x1b[0m => ' + req.ip)
     if (!req.params.userId) return res.json({ error: 'Arguments manquants' })
     let JWTUser = jwt.verify(req.query.userInfos, process.env.JSON_WEB_TOKEN)
     if (!JWTUser) return res.json({ error: 'User introuvable' })
@@ -55,9 +57,9 @@ app.get('/feed/:userId', isTokenValid, async (req, res) => {
     res.json(posts)
 })
 
-app.post('/post', isTokenValid, async (req, res, next) => {
+app.post('/post', [rateLimit, isToken], async (req, res, next) => {
+    console.log("⏰ \x1b[90m"+moment(new Date).format('DD/MM/YYYY HH:mm:ss')+'\x1b[0m \x1b[43m[POST]\x1b[0m', '\x1b[34m/post\x1b[0m => ' + req.ip)
     let { pointer, content, date } = req.body
-    console.log(pointer, content, date)
     if (!pointer || !content || !date) return res.json({ error: 'Arguments manquants' })
     let user = await getUserByName(jwt.verify(req.query.userInfos, process.env.JSON_WEB_TOKEN).name)
     if (!user) return res.json({ error: 'User introuvable' })
@@ -65,7 +67,8 @@ app.post('/post', isTokenValid, async (req, res, next) => {
     res.json(post)
 })
 
-app.delete('/post/:id', isTokenValid, async (req, res) => {
+app.delete('/post/:id', [rateLimit, isToken], async (req, res) => {
+    console.log("⏰ \x1b[90m"+moment(new Date).format('DD/MM/YYYY HH:mm:ss')+'\x1b[0m \x1b[43m[DELETE]\x1b[0m', '\x1b[34m/post/:id\x1b[0m => ' + req.ip)
     const { id } = req.params
     if (!id) return res.json({ error: 'Arguments manquants' })
     let user = await getUserByName(jwt.verify(req.query.userInfos, process.env.JSON_WEB_TOKEN).name)
@@ -74,7 +77,8 @@ app.delete('/post/:id', isTokenValid, async (req, res) => {
     res.json(post)
 })
 
-app.post('/post/:id/like', isTokenValid, async (req, res) => {
+app.post('/post/:id/like', [rateLimit, isToken], async (req, res) => {
+    console.log("⏰ \x1b[90m"+moment(new Date).format('DD/MM/YYYY HH:mm:ss')+'\x1b[0m \x1b[43m[POST]\x1b[0m', '\x1b[34m/post/:id/like\x1b[0m => ' + req.ip)
     if (!req.params.id) return res.json({ error: 'Arguments manquants' })
     let user = await getUserByName(jwt.verify(req.query.userInfos, process.env.JSON_WEB_TOKEN).name)
     if (!user) return res.json({ error: 'User introuvable' })
@@ -82,7 +86,8 @@ app.post('/post/:id/like', isTokenValid, async (req, res) => {
     res.json(post)
 })
 
-app.post('/post/:id/dislike', isTokenValid, async (req, res) => {
+app.post('/post/:id/dislike', [rateLimit, isToken], async (req, res) => {
+    console.log("⏰ \x1b[90m"+moment(new Date).format('DD/MM/YYYY HH:mm:ss')+'\x1b[0m \x1b[43m[POST]\x1b[0m', '\x1b[34m/post/:id/dislike\x1b[0m => ' + req.ip)
     if (!req.params.id) return res.json({ error: 'Arguments manquants' })
     let user = await getUserByName(jwt.verify(req.query.userInfos, process.env.JSON_WEB_TOKEN).name)
     if (!user) return res.json({ error: 'User introuvable' })
@@ -90,19 +95,22 @@ app.post('/post/:id/dislike', isTokenValid, async (req, res) => {
     res.json(post)
 })
 
-app.post('/user/create', isTokenValid, async (req, res) => {
+app.post('/user/create', [rateLimit, isToken], async (req, res) => {
+    console.log("⏰ \x1b[90m"+moment(new Date).format('DD/MM/YYYY HH:mm:ss')+'\x1b[0m \x1b[43m[POST]\x1b[0m', '\x1b[34m/user/create\x1b[0m => ' + req.ip)
     if (!req.body.body.name || !req.body.body.class || !req.body.body.etab || !req.body.body.pp) return res.json({ error: 'Arguments manquants' })
     let user = await createUser(req.body.body.name, req.body.body.class, req.body.body.etab, req.body.body.pp, req.body.body.role)
     res.json(user)
 })
 
-app.post('/user/update', isTokenValid, async (req, res) => {
+app.post('/user/update', [rateLimit, isToken], async (req, res) => {
+    console.log("⏰ \x1b[90m"+moment(new Date).format('DD/MM/YYYY HH:mm:ss')+'\x1b[0m \x1b[43m[POST]\x1b[0m', '\x1b[34m/user/update\x1b[0m => ' + req.ip)
     let userName = await getUserByName(jwt.verify(req.query.userInfos, process.env.JSON_WEB_TOKEN).name)
     let user = await updateUser(userName, userName.id, req.body.body.name, req.body.body.pp, req.body.body.class, req.body.body.etab, req.body.body.role)
     res.json(user)
 })
 
-app.get('/user', isTokenValid, async (req, res) => {
+app.get('/user', [rateLimit, isToken], async (req, res) => {
+    console.log("⏰ \x1b[90m"+moment(new Date).format('DD/MM/YYYY HH:mm:ss')+'\x1b[0m \x1b[43m[GET]\x1b[0m', '\x1b[34m/user\x1b[0m => ' + req.ip)
     if (!req.query?.userInfos) return res.json({ error: 'Userinfos invalide' })
     let userbyName = await getUserByName(jwt.verify(req.query.userInfos, process.env.JSON_WEB_TOKEN).name)
     if (!userbyName) return res.json({ error: 'User introuvable' })
@@ -110,28 +118,29 @@ app.get('/user', isTokenValid, async (req, res) => {
     res.json({...user, token: req.headers['authorization']})
 })
 
-app.get('/user/:id', isTokenValid, async (req, res) => {
+app.get('/user/:id', [rateLimit, isToken], async (req, res) => {
+    console.log("⏰ \x1b[90m"+moment(new Date).format('DD/MM/YYYY HH:mm:ss')+'\x1b[0m \x1b[43m[GET]\x1b[0m', '\x1b[34m/user/:id\x1b[0m => ' + req.ip)
     if (!req.params.id) return res.json({ error: 'Arguments invalides' })
     let user = await getUser(req.params.id)
     if (!user) return res.json({ error: 'User introuvable' })
     res.json({...user, token: req.headers['authorization']})
 })
 
-app.delete('/user/:id', isTokenValid, async (req, res) => {
+app.delete('/user/:id', [rateLimit, isToken], async (req, res) => {
+    console.log("⏰ \x1b[90m"+moment(new Date).format('DD/MM/YYYY HH:mm:ss')+'\x1b[0m \x1b[43m[DELETE]\x1b[0m', '\x1b[34m/user/:id\x1b[0m => ' + req.ip)
     if (!req.params.id || !req.body.user) return res.json({ error: 'Arguments manquants' })
     let user = await deleteUser(req.body.user, req.params.id)
     res.json(user)
 })
 
-app.post('/generatetoken', async (req, res) => {
+app.post('/generatetoken', [rateLimit], async (req, res) => {
+    console.log("⏰ \x1b[90m"+moment(new Date).format('DD/MM/YYYY HH:mm:ss')+'\x1b[0m \x1b[43m[POST]\x1b[0m', '\x1b[34m/generatetoken\x1b[0m => ' + req.ip)
     let { url, username, password, ent } = req.body
-    console.log(url, username, password, ent)
     if (!url || !username || !password || !ent) return res.json({ error: 'Arguments manquants' })
     let token = await generateToken(url, username, password, ent)
     if (!token) return res.json({ error: 'Impossible de générer le token' })
     let userInfos = await getInfos(token.token)
     if (!userInfos) return res.json({ error: 'Impossible de récupérer les informations' })
-    console.log('Token généré')
     let connectInfos = {
         url: url,
         name: userInfos.name,
@@ -139,27 +148,24 @@ app.post('/generatetoken', async (req, res) => {
         password: password,
         ent: ent,
     }
-    res.json({ token: jwt.sign(token.token, process.env.JSON_WEB_TOKEN), userInfos: jwt.sign(connectInfos, process.env.JSON_WEB_TOKEN) })
+    res.json({ token: jwt.sign({token: token}, process.env.JSON_WEB_TOKEN), userInfos: jwt.sign(connectInfos, process.env.JSON_WEB_TOKEN) })
 })
 
-app.post('/login', async (req, res) => {
+app.post('/login', [rateLimit], async (req, res) => {
+    console.log("⏰ \x1b[90m"+moment(new Date).format('DD/MM/YYYY HH:mm:ss')+'\x1b[0m \x1b[43m[POST]\x1b[0m', '\x1b[34m/login\x1b[0m => ' + req.ip)
     let { username, password, ent_url } = req.body
     if (!username || !password || !ent_url) return res.json({ error: 'Arguments manquants' })
     let geturl = await getEntUrl(ent_url)
     if (geturl.error) return res.json(geturl)
     let url = geturl.url
     ent = geturl.ent
-    console.log(url, username, password, ent)
     if (!ent) return res.json({ error: 'Impossible de récupérer l\'url de l\'ENT' })
     let token = await generateToken(url, username, password, ent)
     if (!token) return res.json({ error: 'Impossible de générer le token' })
-    console.log('login token', token)
     let userInfos = await getInfos(token)
     if (!userInfos) return res.json({ error: 'Impossible de récupérer les informations' })
     let user = await createUser(userInfos.name, userInfos.class, userInfos.etab, userInfos.pp, userInfos.role)
-    console.log(user)
     if (!user || user.error) return res.json(user.error || { error: 'Impossible de créer l\'utilisateur' })
-    console.log(userInfos.name)
     let connectInfos = {
         url: url,
         name: userInfos.name,
@@ -167,19 +173,20 @@ app.post('/login', async (req, res) => {
         password: password,
         ent: ent,
     }
-    res.json({ token: jwt.sign(token, process.env.JSON_WEB_TOKEN), userInfos: jwt.sign(connectInfos, process.env.JSON_WEB_TOKEN), user: JSON.stringify(user) })
+    res.json({ token: jwt.sign({token: token}, process.env.JSON_WEB_TOKEN), userInfos: jwt.sign(connectInfos, process.env.JSON_WEB_TOKEN), user: JSON.stringify(user) })
 })
 
-app.post('/getInfos', isTokenValid, async (req, res) => {
+app.post('/getInfos', [rateLimit, isTokenValid], async (req, res) => {
+    console.log("⏰ \x1b[90m"+moment(new Date).format('DD/MM/YYYY HH:mm:ss')+'\x1b[0m \x1b[43m[POST]\x1b[0m', '\x1b[34m/getInfos\x1b[0m => ' + req.ip)
     let token = jwt.verify(req.headers['authorization'], process.env.JSON_WEB_TOKEN)
     if (!token || !token.token) return res.json({ error: 'Token invalide' })
     let infos = await getInfos(token.token)
     if (!infos) return res.json({ error: 'Impossible de récupérer les informations' })
-    console.log('getInfos', infos)
     res.json(infos)
 })
 
-app.get('/recipients', isTokenValid, async (req, res) => {
+app.get('/recipients', [rateLimit, isTokenValid], async (req, res) => {
+    console.log("⏰ \x1b[90m" + moment(new Date).format('DD/MM/YYYY HH:mm:ss') + '\x1b[0m \x1b[43m[GET]\x1b[0m', '\x1b[34m/recipients\x1b[0m => ' + req.ip)
     let token = jwt.verify(req.headers['authorization'], process.env.JSON_WEB_TOKEN)
     if (!token || !token.token) return res.json({ error: 'Token invalide' })
     let recipients = await getRecipients(token.token)
@@ -187,13 +194,15 @@ app.get('/recipients', isTokenValid, async (req, res) => {
     res.json({ profs: recipients, token: req.body?.token, userInfos: req.body?.userInfos })
 })
 
-app.get('/admin/users', isAdmin, async (req, res) => {
+app.get('/admin/users', [rateLimit, isAdmin], async (req, res) => {
+    console.log("⏰ \x1b[90m"+moment(new Date).format('DD/MM/YYYY HH:mm:ss')+'\x1b[0m \x1b[43m[GET]\x1b[0m', '\x1b[34m/admin/users\x1b[0m => ' + req.ip)
     let users = await getUsers()
     if (!users) return res.json({ error: 'Impossible de récupérer les utilisateurs' })
     res.json(users)
 })
 
-app.get('/badges', isTokenValid, async (req, res) => {
+app.get('/badges', [rateLimit, isToken], async (req, res) => {
+    console.log("⏰ \x1b[90m"+moment(new Date).format('DD/MM/YYYY HH:mm:ss')+'\x1b[0m \x1b[43m[GET]\x1b[0m', '\x1b[34m/badges\x1b[0m => ' + req.ip)
     let token = jwt.verify(req.headers['authorization'], process.env.JSON_WEB_TOKEN)
     if (!token || !token.token) return res.json({ error: 'Token invalide' })
     let badges = await getAllBadges()
@@ -201,7 +210,8 @@ app.get('/badges', isTokenValid, async (req, res) => {
     res.json(badges)
 })
 
-app.post('/badges/:id', isTokenValid, async (req, res) => {
+app.post('/badges/:id', [rateLimit, isToken], async (req, res) => {
+    console.log("⏰ \x1b[90m"+moment(new Date).format('DD/MM/YYYY HH:mm:ss')+'\x1b[0m \x1b[43m[POST]\x1b[0m', '\x1b[34m/badges/:id\x1b[0m => ' + req.ip)
     let token = jwt.verify(req.headers['authorization'], process.env.JSON_WEB_TOKEN)
     if (!token || !token.token) return res.json({ error: 'Token invalide' })
     let user = jwt.verify(req.query.userInfos, process.env.JSON_WEB_TOKEN)
@@ -215,7 +225,8 @@ app.post('/badges/:id', isTokenValid, async (req, res) => {
 })
 
 
-app.put('/badge/:id', isTokenValid, async (req, res) => {
+app.put('/badge/:id', [rateLimit, isToken], async (req, res) => {
+    console.log("⏰ \x1b[90m"+moment(new Date).format('DD/MM/YYYY HH:mm:ss')+'\x1b[0m \x1b[43m[PUT]\x1b[0m', '\x1b[34m/badges/:id\x1b[0m => ' + req.ip)
     let token = jwt.verify(req.headers['authorization'], process.env.JSON_WEB_TOKEN)
     if (!token || !token.token) return res.json({ error: 'Token invalide' })
     let user = jwt.verify(req.query.userInfos, process.env.JSON_WEB_TOKEN)
@@ -228,16 +239,17 @@ app.put('/badge/:id', isTokenValid, async (req, res) => {
 
 /// NOTIFICATIONS
 
-app.get('/push/key', isTokenValid, async (req, res) => {
+app.get('/push/key', [rateLimit, isToken], async (req, res) => {
+    console.log("⏰ \x1b[90m"+moment(new Date).format('DD/MM/YYYY HH:mm:ss')+'\x1b[0m \x1b[43m[GET]\x1b[0m', '\x1b[34m/push/key\x1b[0m => ' + req.ip)
     let token = jwt.verify(req.headers['authorization'], process.env.JSON_WEB_TOKEN)
     if (!token || !token.token) return res.json({ error: 'Token invalide' })
     const vapidPublicKey = process.env.VAPID_PUBLIC_KEY
-    console.log(vapidPublicKey)
     if (!vapidPublicKey) return res.json({ error: 'Impossible de récupérer la clé' })
     res.json(vapidPublicKey)
 })
 
-app.post('/push/register', isTokenValid, async (req, res) => {
+app.post('/push/register', [rateLimit, isToken], async (req, res) => {
+    console.log("⏰ \x1b[90m"+moment(new Date).format('DD/MM/YYYY HH:mm:ss')+'\x1b[0m \x1b[43m[POST]\x1b[0m', '\x1b[34m/push/register\x1b[0m => ' + req.ip)
     let token = jwt.verify(req.headers['authorization'], process.env.JSON_WEB_TOKEN)
     if (!token || !token.token || !req.body.body.endpoint) return res.json({ error: 'Token invalide' })
     let user = jwt.verify(req.query.userInfos, process.env.JSON_WEB_TOKEN)
@@ -245,7 +257,6 @@ app.post('/push/register', isTokenValid, async (req, res) => {
     user = await getUserByName(user.name)
     if (!user) return res.json({ error: 'Impossible de récupérer l\'utilisateur' })
     let subscription = req.body.body
-    console.log('register notif', req.body.body)
     if (!subscription.endpoint) return res.json({ error: 'Arguments manquants' })
     let currentSubscription = await getSubscription(subscription)
     if (currentSubscription) return res.json({ error: 'Vous êtes déjà inscrit aux notifications' })
