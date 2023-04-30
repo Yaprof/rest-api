@@ -233,6 +233,7 @@ app.get('/push/key', isTokenValid, async (req, res) => {
     let token = jwt.verify(req.headers['authorization'], process.env.JSON_WEB_TOKEN)
     if (!token || !token.token) return res.json({ error: 'Token invalide' })
     const vapidPublicKey = process.env.VAPID_PUBLIC_KEY
+    console.log(vapidPublicKey)
     if (!vapidPublicKey) return res.json({ error: 'Impossible de récupérer la clé' })
     res.json(vapidPublicKey)
 })
@@ -243,7 +244,7 @@ app.post('/push/register', isTokenValid, async (req, res) => {
     let user = jwt.verify(req.query.userInfos, process.env.JSON_WEB_TOKEN)
     if (!user) return res.json({ error: 'Token invalide' })
     let subscription = req.body.body
-    console.log(req.body.body)
+    console.log('register notif', req.body.body)
     if (!subscription.endpoint) return res.json({ error: 'Arguments manquants' })
     let currentSubscription = await getSubscription(user)
     if (currentSubscription) return res.json({ error: 'Vous êtes déjà inscrit aux notifications' })
