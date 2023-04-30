@@ -61,8 +61,8 @@ model Notification {
   id           Int     @id @default(autoincrement())
   endpoint     String?
   public_key   String?
-  auth_token   String?
-  user   User     @relation("notification", fields: [userId], references: [id])
-  userId Int      @unique
+  auth_token   String?  @unique
+  user   User  @relation("notification", fields: [userId], references: [id])
+  userId Int?
   expire_date  DateTime?
 }

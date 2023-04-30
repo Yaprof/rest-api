@@ -48,7 +48,7 @@ exports.getSubscription = async function getSubscription(subscription) {
     if (!subscription) return { error: 'Arguments manquants' }
     subscription = await prisma.notification.findUnique({
         where: {
-            public_key: subscription.p256dh
+            auth_token: subscription.keys.auth
         }
     }).catch(e => {
         console.log(e)
