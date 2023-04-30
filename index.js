@@ -246,7 +246,7 @@ app.post('/push/register', isTokenValid, async (req, res) => {
     let subscription = req.body.body
     console.log('register notif', req.body.body)
     if (!subscription.endpoint) return res.json({ error: 'Arguments manquants' })
-    let currentSubscription = await getSubscription(user)
+    let currentSubscription = await getSubscription(subscription)
     if (currentSubscription) return res.json({ error: 'Vous êtes déjà inscrit aux notifications' })
     let newSubscription = await registerSubscription(user, subscription)
     if (!newSubscription) return res.json({ error: 'Impossible de mettre à jour la souscription' })

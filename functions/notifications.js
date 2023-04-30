@@ -44,13 +44,11 @@ exports.registerSubscription = async function registerSubscription(user, subscri
     return notification
 }
 
-exports.getSubscription = async function getSubscription(user) {
-    if (!user) return { error: 'Arguments manquants' }
-    user = await getUserByName(user.name)
-    if (!user?.notification) return false
-    let subscription = await prisma.notification.findUnique({
+exports.getSubscription = async function getSubscription(subscription) {
+    if (!subscription) return { error: 'Arguments manquants' }
+    subscription = await prisma.notification.findUnique({
         where: {
-            userId: parseInt(user.id)
+            public_key: subscription.p256dh
         }
     }).catch(e => {
         console.log(e)
