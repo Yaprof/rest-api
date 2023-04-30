@@ -243,6 +243,8 @@ app.post('/push/register', isTokenValid, async (req, res) => {
     if (!token || !token.token || !req.body.body.endpoint) return res.json({ error: 'Token invalide' })
     let user = jwt.verify(req.query.userInfos, process.env.JSON_WEB_TOKEN)
     if (!user) return res.json({ error: 'Token invalide' })
+    user = await getUserByName(user.name)
+    if (!user) return res.json({ error: 'Impossible de récupérer l\'utilisateur' })
     let subscription = req.body.body
     console.log('register notif', req.body.body)
     if (!subscription.endpoint) return res.json({ error: 'Arguments manquants' })
