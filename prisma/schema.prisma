@@ -45,7 +45,6 @@ model User {
   likes         Post[]
   dislikes      Post[]   @relation("dislikedBy")
   profile       Profile? @relation("profile")
-  notification  Notification? @relation("notification")
 }
 
 model Prof {
