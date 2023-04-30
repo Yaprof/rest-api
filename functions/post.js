@@ -59,10 +59,6 @@ exports.createPost = async function createPost(user, pointer, content, date) {
 
     let notifications = await prisma.notification.findMany({
         where: {
-            establishment: user.establishment,
-            role: {
-                in: [50, 99]
-            },
             userId: {
                 notIn: [user.id]
             }
@@ -72,9 +68,18 @@ exports.createPost = async function createPost(user, pointer, content, date) {
         return { error: 'Impossible de trouver les notifications' }
     })
 
-    console.log(notifications)
 
     for (let i = 0; i < notifications.length; i++) {
+        let notifUser = await prisma.user.findUnique({
+            where: {
+                id: notifications[i].userId
+            }
+        }).catch(e => {
+            console.log(e)
+            return { error: 'Impossible de trouver l\'utilisateur' }
+        })
+        notifications = notifications.filter(n => n.establishment != user.establishment || n.userId != notifUser.id || n.endpoint != notifUser.endpoint)
+        console.log(notifications)
         const notification = notifications[i];
         let subscription = {
             endpoint: notification.endpoint,
