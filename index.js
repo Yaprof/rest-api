@@ -47,7 +47,8 @@ app.use(express.json({limit: '50mb'}))
 app.use(express.urlencoded({limit: '50mb'}))
 
 app.get('/feed/:userId', [rateLimit, isToken], async (req, res) => {
-    console.log("⏰ \x1b[90m"+moment(new Date).format('DD/MM/YYYY HH:mm:ss')+'\x1b[0m \x1b[43m[GET]\x1b[0m', '\x1b[34m/feed/:userId\x1b[0m => ' + req.ip)
+    const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+    console.log("⏰ \x1b[90m"+moment(new Date).format('DD/MM/YYYY HH:mm:ss')+'\x1b[0m \x1b[43m[GET]\x1b[0m', '\x1b[34m/feed/:userId\x1b[0m => ' + ip)
     if (!req.params.userId) return res.json({ error: 'Arguments manquants' })
     let JWTUser = jwt.verify(req.query.userInfos, process.env.JSON_WEB_TOKEN)
     if (!JWTUser) return res.json({ error: 'User introuvable' })
