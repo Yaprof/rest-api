@@ -63,6 +63,6 @@ model Notification {
   public_key   String?
   auth_token   String?  @unique
   user   User  @relation("notification", fields: [userId], references: [id])
-  userId Int?  @unique
+  userId Int   @unique
   expire_date  DateTime?
 }
