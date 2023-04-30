@@ -6,8 +6,7 @@ const prisma = new PrismaClient()
 exports.registerSubscription = async function registerSubscription(user, subscription) {
     console.log(user, subscription)
     if (!user || !subscription) return { error: 'Arguments manquants' }
-    user = await getUserByName(user.name)
-    if (user?.notification) return { error: 'Vous êtes déjà abonné aux notifications' }
+
     let data = {
         endpoint: subscription.endpoint,
         expire_date: subscription.expirationTime,

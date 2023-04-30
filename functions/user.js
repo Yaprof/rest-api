@@ -62,7 +62,6 @@ exports.getUser = async function getUser(userId) {
         },
         include: {
             profile: true,
-            notification: true,
             posts: {
                 include: {
                     author: {
@@ -91,7 +90,6 @@ exports.getUserByName = async function getUserByName(name) {
         },
         include: {
             profile: true,
-            notification: true,
             posts: {
                 include: {
                     author: {
