@@ -262,6 +262,11 @@ app.post('/push/register', [rateLimit, isToken], async (req, res) => {
     res.json(newSubscription)
 })
 
+app.use((err, req, res, next) => {
+  console.error(err.stack); // Log the error to the console
+  res.status(500).json({ error: 'Internal server error' }); // Send a 500 status code and an error message
+});
+
 
 const server = app.listen(8080)
 console.log('Server is running on ' + server.address().port)
