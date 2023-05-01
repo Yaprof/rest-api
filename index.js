@@ -39,15 +39,11 @@ dotenv.config();
 const prisma = new PrismaClient()
 const app = express()
 
-var jsonParser = bodyParser.json({ limit: '50mb', type: 'application/json', extended: true  })
-var urlencodedParser = bodyParser.urlencoded({ limit: '50mb', extended: true })
-
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.json({limit: '50mb'}))
 app.use(express.urlencoded({limit: '50mb'}))
 
 app.get('/feed/:userId', [rateLimit, isToken], async (req, res) => {
-    const ip = req.headers['x-forwarded-for'];
     console.log("⏰ \x1b[90m"+moment(new Date).format('DD/MM/YYYY HH:mm:ss')+'\x1b[0m \x1b[43m[GET]\x1b[0m', '\x1b[34m/feed/:userId\x1b[0m => ' + req.headers['x-forwarded-for'].split(',')[0])
     if (!req.params.userId) return res.json({ error: 'Arguments manquants' })
     let JWTUser = jwt.verify(req.query.userInfos, process.env.JSON_WEB_TOKEN)
