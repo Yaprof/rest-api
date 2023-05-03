@@ -8,7 +8,7 @@ exports.default = async function isToken(req, res, next) {
 
     let authHeader = req.headers['authorization']
     if (!authHeader) authHeader = req.body.headers?.Authorization
-    const token = authHeader?.replaceAll('Bearer ', '') || authHeader.split(' ')[1]
+    const token = authHeader?.replaceAll('Bearer ', '') || authHeader?.split(' ')[1]
     if (!token || token == "undefined") return res.status(401).send('Access denied')
     try {
         let verified = jwt.verify(token, process.env.JSON_WEB_TOKEN)

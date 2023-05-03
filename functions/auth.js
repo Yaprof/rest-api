@@ -40,7 +40,7 @@ exports.getEntUrl = async function getEntUrl(ent_url) {
     let response = await axios.get(`https://api.androne.dev/papillon-v4/redirect.php?url=${encodeURIComponent(ent_url)}`)
     if (!response || !response.data || response.data.error) return { error: "Impossible de récupérer l'url de l'ent" }
     if (!response.data?.url || !response.data?.url.includes('.')) return { error: "Établissement incorrect" }
-    let ent = response.data.url.split(".")[1].replace('-', '_')
+    let ent = response.data?.url?.split(".")[1].replace('-', '_')
     let url = ent_url + (ent_url.includes('eleve.html') ? '' : '/eleve.html')
     return {url, ent}
 }
