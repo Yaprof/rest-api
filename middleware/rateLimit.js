@@ -1,4 +1,3 @@
-
 // Rate limit settings
 const RATE_LIMIT_WINDOW_MS = 60 * 1000; // 1 minute
 const RATE_LIMIT_MAX_REQUESTS = 100; //100 requests per IP address per minute

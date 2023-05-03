@@ -45,6 +45,7 @@ model User {
   likes         Post[]
   dislikes      Post[]   @relation("dislikedBy")
   profile       Profile? @relation("profile")
+  isBanned      Boolean  @default(false)
 }
 
 model Prof {

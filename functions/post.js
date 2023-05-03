@@ -147,14 +147,14 @@ exports.likePost = async function likePost(user, id) {
         dislikedBy: { disconnect: { id: parseInt(user.id) } },
     }
     let coinToChange = 1
-    if (post.likedBy.find(u => u.id == user.id)) {
+    if (post.likedBy?.find(u => u.id == user.id)) {
         coinToChange = -1
         data = {
             likedBy: { disconnect: { id: parseInt(user.id) } },
             dislikedBy: { disconnect: { id: parseInt(user.id) } },
         }
     }
-    if (post.dislikedBy.find(u => u.id == user.id)) coinToChange = 0
+    if (post.dislikedBy?.find(u => u.id == user.id)) coinToChange = 0
 
     post = await prisma.post.update({
         where: { id: parseInt(id) },

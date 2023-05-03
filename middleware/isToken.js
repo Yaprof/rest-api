@@ -1,5 +1,5 @@
 const { getInfos, generateToken, getRecipients } = require("../functions/auth")
-const { getUser } = require("../functions/user")
+const { getUserByName } = require("../functions/user")
 const jwt = require('jsonwebtoken');
 const dotenv = require('dotenv');
 dotenv.config();
@@ -18,6 +18,10 @@ exports.default = async function isToken(req, res, next) {
 
         const infos = jwt.verify(userInfos, process.env.JSON_WEB_TOKEN)
         if (!infos) return res.status(400).send('Invalid userInfos')
+
+        let user = await getUserByName(infos.name)
+        if (!user) return res.status(400).send('Invalid user')
+        if (user.isBanned) return res.status(403).send('Access denied')
 
         req.headers['authorization'] = jwt.sign({ token: verified?.token }, process.env.JSON_WEB_TOKEN)
         next()

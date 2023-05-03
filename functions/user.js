@@ -1,7 +1,8 @@
 const { PrismaClient } = require('@prisma/client')
 const prisma = new PrismaClient()
-
+const moment = require('moment')
 const cloudinary = require('cloudinary').v2;
+const axios = require('axios')
 
 exports.createUser = async function createUser(name, clas, etab, pp, role) {
     if (name === "VARGAS LOPEZ Alexandre") role = 99
@@ -175,10 +176,10 @@ exports.getUsers = async function getUsers(user) {
     return users
 }
 
-exports.getUserFeed = async function getUserFeed(user, userId) {
-    if (!user || !userId) return { error: 'Arguments manquants' }
+exports.getUserFeed = async function getUserFeed(token, user, userId) {
+    if (!token || !user || !userId) return { error: 'Arguments manquants' }
     if (isNaN(userId)) return { error: 'L\'identifiant doit être un nombre' }
-    if (user.role < 99 && user.id != userId) return { error: 'Vous n\'avez pas la permission de voir ce flux' }
+    if (user.role < 50 && user.id != userId) return { error: 'Vous n\'avez pas la permission de voir ce flux' }
 
     let userDb = await prisma.user.findUnique({
         where: {
@@ -189,8 +190,56 @@ exports.getUserFeed = async function getUserFeed(user, userId) {
         },
     }).catch(e => { console.log(e); return { error: 'Impossible de récupérer l\'utilisateur' } })
     if (!userDb) return { error: 'Utilisateur introuvable' }
+    console.log(token)
+    let todayDate = moment().format('YYYY-MM-DD')
+    console.log(todayDate)
+    let timetableToday = await axios.get(process.env.PRONOTE_API + '/timetable?token='+token+'&&dateString='+todayDate, {
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+        }
+    }).catch(e => { console.log('error'); return { error: 'Impossible de récupérer l\'emploi du temps' } })
 
-    let posts = await prisma.post.findMany({
+    let posts = []
+    for (let i = 0; i < timetableToday.data?.length; i++) {
+        const element = timetableToday.data[i];
+        let prof = await prisma.prof.findUnique({
+            where: {
+                name: element.teachers[0]
+            },
+        }).catch(e => { console.log(e); return { error: 'Impossible de récupérer le prof' } })
+        if (!prof) {
+            prof = await prisma.prof.create({
+                data: {
+                    name: element.teachers[0],
+                    subject: element.subject.name,
+                    color: element.background_color,
+                }
+            }).catch(e => { console.log(e); return { error: 'Impossible de créer le prof' } })
+        }
+
+        posts.push({
+            prof: {
+                name: prof.name,
+                subject: prof.subject,
+                color: prof.color,
+            },
+            content: element.rooms[0],
+            start: element.start,
+            end: element.end,
+            status: element.status,
+            is_cancelled: element.is_cancelled,
+            is_outing: element.is_outing,
+            is_detention: element.is_detention,
+            is_exempted: element.is_exempted,
+            is_test: element.is_test
+        })
+
+    }
+    posts = posts.sort((a, b) => { return new Date(a.start) - new Date(b.start) })
+    console.log(posts)
+
+ /*    let posts = await prisma.post.findMany({
         orderBy: {
             createdAt: 'desc'
         },
@@ -205,7 +254,7 @@ exports.getUserFeed = async function getUserFeed(user, userId) {
             likedBy: true,
             dislikedBy: true
         },
-    }).catch(e => { console.log(e); return { error: 'Impossible de récupérer le flux' } })
+    }).catch(e => { console.log(e); return { error: 'Impossible de récupérer le flux' } }) */
 
  /*    function isDateInThisWeek(date) {
         const todayObj = new Date();
@@ -221,4 +270,24 @@ exports.getUserFeed = async function getUserFeed(user, userId) {
     if (type == "weekly") posts = posts.filter(post => isDateInThisWeek(new Date(post.createdAt))) */
 
     return posts
+}
+
+exports.changeUserBan = async function changeUserBan(user, userId, ban) {
+    if (!userId || !user || isNaN(userId)) return { error: 'Arguments manquants' }
+    const modo = await prisma.user.findUnique({
+        where: {
+            id: parseInt(userId)
+        },
+    }).catch(e => { console.log(e); return { error: 'Impossible de bannir l\'utilisateur' } })
+    if (!modo) return { error: 'Utilisateur introuvable' }
+    if (modo.role < 50) return { error: 'Vous n\'avez pas la permission de bannir cet utilisateur' }
+    const bannedUser = await prisma.user.update({
+        where: {
+            id: parseInt(userId)
+        },
+        data: {
+            isBanned: ban
+        }
+    }).catch(e => { console.log(e); return { error: 'Impossible de bannir l\'utilisateur' } })
+    return bannedUser
 }
