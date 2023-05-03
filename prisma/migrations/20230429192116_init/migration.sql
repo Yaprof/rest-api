@@ -8,7 +8,7 @@
 ALTER TABLE "Prof" DROP COLUMN "absences";
  */
 -- CreateTable
-CREATE TABLE "Notification" (
+/* CREATE TABLE "Notification" (
     "id" SERIAL NOT NULL,
     "endpoint" TEXT,
     "public_key" TEXT,
@@ -23,3 +23,4 @@ CREATE UNIQUE INDEX "Notification_userId_key" ON "Notification"("userId");
 
 -- AddForeignKey
 ALTER TABLE "Notification" ADD CONSTRAINT "Notification_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ */
