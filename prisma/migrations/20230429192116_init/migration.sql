@@ -4,9 +4,9 @@
   - You are about to drop the column `absences` on the `Prof` table. All the data in the column will be lost.
 
 */
--- AlterTable
+/* -- AlterTable
 ALTER TABLE "Prof" DROP COLUMN "absences";
-
+ */
 -- CreateTable
 CREATE TABLE "Notification" (
     "id" SERIAL NOT NULL,
