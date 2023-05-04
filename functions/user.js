@@ -141,7 +141,7 @@ exports.updateUser = async function updateUser(user, userId, name, pp, clas, eta
     let url;
 
     if (pp) {
-        const res = await cloudinary.uploader.upload(pp, { public_id: name, folder: 'user/icons', overwrite: true, use_filename: true, unique_filename: false })
+        const res = await cloudinary.uploader.upload_stream(pp, { public_id: name, folder: 'user/icons', overwrite: true, use_filename: true, unique_filename: false })
         if (!res) return { error: 'Impossible d\'upload la pp' }
 
         url = await cloudinary.url(res.secure_url, { width: 100, height: 100, crop: "cover", fetch_format: "auto" })
