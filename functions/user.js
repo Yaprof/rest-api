@@ -143,15 +143,18 @@ exports.updateUser = async function updateUser(user, userId, name, pp, clas, eta
     if (pp) {
         let res;
         try {
-            res = await cloudinary.uploader.upload_stream(pp, { public_id: name, folder: 'user/icons', overwrite: true, use_filename: true, unique_filename: false })
+            res = await cloudinary.uploader.upload_stream(pp, { public_id: name, folder: 'user/icons', overwrite: true, use_filename: true, unique_filename: false }, (err, res) => {
+                console.log(err)
+                if (err) return { error: 'Impossible d\'upload la pp' }
+                return res
+            })
+            if (!res) return { error: 'Impossible d\'upload la pp' }
+
+            url = await cloudinary.url(res.secure_url, { width: 100, height: 100, crop: "cover", fetch_format: "auto" })
         }catch (e) {
             console.log(e)
             return { error: 'Impossible d\'upload la pp' }
         }
-
-        if (!res) return { error: 'Impossible d\'upload la pp' }
-
-        url = await cloudinary.url(res.secure_url, { width: 100, height: 100, crop: "cover", fetch_format: "auto" })
     }
 
 
