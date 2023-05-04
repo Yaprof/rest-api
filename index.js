@@ -1,7 +1,7 @@
 const express = require('express')
 const { PrismaClient } = require('@prisma/client')
 var bodyParser = require('body-parser')
-var cors = require('cors')
+const cors = require('cors')
 const moment = require('moment')
 const jwt = require('jsonwebtoken');
 const dotenv = require('dotenv');
@@ -39,7 +39,7 @@ dotenv.config();
 const prisma = new PrismaClient()
 const app = express()
 
-app.use(cors({ origin: true, credentials: true }));
+app.use(cors());
 app.use(bodyParser.json({ limit: '50mb' }))
 app.use(express.urlencoded({ limit: '50mb' }))
 
