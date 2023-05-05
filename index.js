@@ -116,7 +116,7 @@ app.post('/user/upload', [rateLimit, isToken, upload.single('file')], async (req
     console.log("⏰ \x1b[90m"+moment(new Date).format('DD/MM/YYYY HH:mm:ss')+'\x1b[0m \x1b[43m[POST]\x1b[0m', '\x1b[34m/user/update\x1b[0m => ' + req?.headers['x-forwarded-for']?.split(',')[0])
     let userName = await getUserByName(jwt.verify(req.query.userInfos, process.env.JSON_WEB_TOKEN).name)
     if (!req?.file) return res.json({ error: 'Arguments manquants' })
-    let user = await u(userName, userName.id, req?.file)
+    let user = await uploadUserPp(userName, userName.id, req?.file)
     res.json(user)
 })
 
