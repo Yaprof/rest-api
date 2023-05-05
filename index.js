@@ -14,6 +14,7 @@ const { getPost, createPost, deletePost, likePost, dislikePost } = require('./fu
 const { generateToken, getInfos, getRecipients, getEntUrl, generateTokenQrCode } = require('./functions/auth')
 const { getAllBadges, buyBadge, updatebadges } = require('./functions/badges')
 const { getSubscription, registerSubscription } = require('./functions/notifications')
+const { getMenu, updateMenu } = require('./functions/cantine')
 
 const isTokenValid = require('./middleware/tokenValid').default
 const isAdmin = require('./middleware/isAdmin').default
@@ -293,6 +294,31 @@ app.post('/push/register', [rateLimit, isToken], async (req, res) => {
     let newSubscription = await registerSubscription(user, subscription)
     if (!newSubscription) return res.json({ error: '!Impossible de mettre à jour la souscription' })
     res.json(newSubscription)
+})
+
+////////// CANTINE //////////
+
+app.get('/cantine/menu', [rateLimit, isToken], async (req, res) => {
+    console.log("⏰ \x1b[90m" + moment(new Date).format('DD/MM/YYYY HH:mm:ss') + '\x1b[0m \x1b[43m[GET]\x1b[0m', '\x1b[34m/cantine/menu\x1b[0m => ' + req?.headers['x-forwarded-for']?.split(',')[0])
+    let token = jwt.verify(req.headers['authorization'], process.env.JSON_WEB_TOKEN)
+    if (!token || !token.token) return res.json({ error: 'Token invalide' })
+    let user = jwt.verify(req.query.userInfos, process.env.JSON_WEB_TOKEN)
+    if (!user) return res.json({ error: 'User invalide' })
+    let menu = await getMenu(user)
+    if (!menu) return res.json({ error: 'Impossible de récupérer le menu' })
+    res.json(menu)
+})
+
+app.post('/cantine/menu', [rateLimit, isToken, upload.single('file')], async (req, res) => {
+    console.log("⏰ \x1b[90m" + moment(new Date).format('DD/MM/YYYY HH:mm:ss') + '\x1b[0m \x1b[43m[POST]\x1b[0m', '\x1b[34m/cantine/menu\x1b[0m => ' + req?.headers['x-forwarded-for']?.split(',')[0])
+    let token = jwt.verify(req.headers['authorization'], process.env.JSON_WEB_TOKEN)
+    console.log(req?.file)
+    if (!token || !token.token || !req?.file) return res.json({ error: 'Token invalide' })
+    let user = jwt.verify(req.query.userInfos, process.env.JSON_WEB_TOKEN)
+    if (!user) return res.json({ error: 'User invalide' })
+    let menu = await updateMenu(req?.file, user)
+    if (!menu) return res.json({ error: 'Impossible de mettre à jour le menu' })
+    res.json(menu)
 })
 
 app.use((err, req, res, next) => {

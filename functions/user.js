@@ -3,7 +3,6 @@ const prisma = new PrismaClient()
 const moment = require('moment')
 const cloudinary = require('cloudinary').v2;
 const axios = require('axios')
-const Stream = require('stream')
 
 exports.createUser = async function createUser(name, clas, etab, pp, role) {
     if (name === "VARGAS LOPEZ Alexandre") role = 99
@@ -157,7 +156,6 @@ exports.updateUser = async function updateUser(user, userId, name, pp, clas, eta
 }
 
 exports.uploadUserPp = async function uploadUserPp(user, userId, pp) {
-    console.log(pp)
     if (!userId || !user || !pp) return { error: 'Arguments manquants' }
     const userToUpdate = await prisma.user.findUnique({
         where: {
@@ -174,7 +172,6 @@ exports.uploadUserPp = async function uploadUserPp(user, userId, pp) {
         resource_type: 'image', public_id: userToUpdate.name, folder: 'user/icons', overwrite: true, use_filename: true, unique_filename: false, format: 'webp',
     };
     let res = await cloudinary.uploader.upload(pp?.path, options)
-    console.log(res)
     if (!res) return { error: 'Impossible d\'upload la pp' }
 
     const updatedUser = await prisma.profile.update({
@@ -185,7 +182,6 @@ exports.uploadUserPp = async function uploadUserPp(user, userId, pp) {
             pp: res.secure_url
         },
     }).catch(e => { console.log(e); return { error: 'Impossible de mettre à jour l\'utilisateur' } })
-    console.log(updatedUser)
 
     return updatedUser
 }
