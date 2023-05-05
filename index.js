@@ -6,6 +6,8 @@ const moment = require('moment')
 const jwt = require('jsonwebtoken');
 const dotenv = require('dotenv');
 const webpush = require('web-push');
+const multer = require('multer');
+const upload = multer({ dest: 'uploads/' });
 
 const { getUser, createUser, getUserFeed, updateUser, getUserByName, getUsers, changeUserBan } = require('./functions/user')
 const { getPost, createPost, deletePost, likePost, dislikePost } = require('./functions/post')
@@ -110,12 +112,11 @@ app.post('/user/update', [rateLimit, isToken], async (req, res) => {
     res.json(user)
 })
 
-app.post('/user/upload', [rateLimit, isToken], async (req, res) => {
-    console.log(req.file)
+app.post('/user/upload', [rateLimit, isToken, upload.single('file')], async (req, res) => {
     console.log("⏰ \x1b[90m"+moment(new Date).format('DD/MM/YYYY HH:mm:ss')+'\x1b[0m \x1b[43m[POST]\x1b[0m', '\x1b[34m/user/update\x1b[0m => ' + req?.headers['x-forwarded-for']?.split(',')[0])
     let userName = await getUserByName(jwt.verify(req.query.userInfos, process.env.JSON_WEB_TOKEN).name)
     if (!req?.file) return res.json({ error: 'Arguments manquants' })
-    let user = await updateUser(userName, userName.id, req?.file)
+    let user = await u(userName, userName.id, req?.file)
     res.json(user)
 })
 
