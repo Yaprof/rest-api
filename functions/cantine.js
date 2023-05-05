@@ -9,7 +9,8 @@ exports.getMenu = async function getMenu(user) {
     user = await getUserByName(user.name)
     if (!user) return { error: 'User not found' }
     let menu = await prisma.cantine.findUnique({ where: { establishment: user.establishment } }).catch(e => { console.log(e); return { error: 'Impossible de trouver le menu' } })
-    if (!isSameWeek(new Date(menu.createdAt), new Date())) return { error: 'Le menu date de la semaine dernière' }
+    if (!menu) return { error: 'Menu introuvable' }
+    if (!isSameWeek(new Date(menu?.createdAt), new Date())) return { error: 'Le menu date de la semaine dernière' }
     return menu
 }
 
