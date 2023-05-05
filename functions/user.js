@@ -139,31 +139,11 @@ exports.updateUser = async function updateUser(user, userId, name, pp, clas, eta
     if (!userToUpdate) return { error: 'Utilisateur introuvable' }
     if (user.role < 99 && user.id != userToUpdate.id) return { error: 'Vous n\'avez pas la permission de modifier cet utilisateur' }
 
-    if (pp?.buffer) {
-        console.log(userToUpdate.name)
-
-        const buffer = new Uint8Array(JSON.parse(pp.buffer)).buffer;
-        const file = Buffer.from(buffer);
-        const options = {
-            resource_type: 'image', public_id: userToUpdate.name, folder: 'user/icons', overwrite: true, use_filename: true, unique_filename: false, format: 'webp',
-        };
-        let res = await cloudinary.uploader.upload_stream(options)
-        if (!res) return { error: 'Impossible d\'upload la pp' }
-
-        const stream = new Stream.Readable()
-        stream.push(file);
-        stream.push(null);
-        stream.pipe(res);
-    }
-
-
     let updateData = {}
     if (name && name != userToUpdate.name) updateData.name = name
     if (clas && clas != userToUpdate.class) updateData.class = clas
     if (etab && etab != userToUpdate.establishment) updateData.establishment = etab
     if (role && role != userToUpdate.role) updateData.role = role
-    if (pp?.buffer) updateData.profile = { update: { pp: 'https://res.cloudinary.com/dzg9awmm8/image/upload/v1683235733/user/icons/'+userToUpdate.name.replaceAll(' ', '%20')+'.'+pp.type } }
-    console.log(updateData)
     const updatedUser = await prisma.user.update({
         where: {
             id: parseInt(userId)
@@ -197,15 +177,12 @@ exports.uploadUserPp = async function uploadUserPp(user, userId, pp) {
     console.log(res)
     if (!res) return { error: 'Impossible d\'upload la pp' }
 
-    const updatedUser = await prisma.user.update({
+    const updatedUser = await prisma.profile.update({
         where: {
-            id: parseInt(userId)
+            userId: parseInt(userId)
         },
         data: {
-            profile: { update: { pp: 'https://res.cloudinary.com/dzg9awmm8/image/upload/v1683235733/user/icons/' + userToUpdate.name.replaceAll(' ', '%20') + '.' + pp.mimetype.replace('image/', '') } }
-        },
-        include: {
-            profile: true,
+            pp: 'https://res.cloudinary.com/dzg9awmm8/image/upload/user/icons/' + userToUpdate.name.replaceAll(' ', '%20') + '.' + pp.mimetype.replace('image/', '')
         },
     }).catch(e => { console.log(e); return { error: 'Impossible de mettre à jour l\'utilisateur' } })
 
