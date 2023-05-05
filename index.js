@@ -8,7 +8,7 @@ const dotenv = require('dotenv');
 
 const { getUser, createUser, getUserFeed, updateUser, getUserByName, getUsers } = require('./functions/user')
 const { getPost, createPost, deletePost, likePost, dislikePost } = require('./functions/post')
-const { generateToken, getInfos, getRecipients, getEntUrl } = require('./functions/auth')
+const { generateToken, getInfos, getRecipients, getEntUrl, generateTokenQrCode } = require('./functions/auth')
 const { getAllBadges, buyBadge, updatebadges } = require('./functions/badges')
 
 const isTokenValid = require('./middleware/tokenValid').default
@@ -118,7 +118,7 @@ app.post('/generatetoken', async (req, res) => {
     console.log(url, username, password, ent)
     if (!url || !username || !password || !ent) return res.json({ error: 'Arguments manquants' })
     let token = await generateToken(url, username, password, ent)
-    if (!token) return res.json({ error: 'Impossible de générer le token' })
+    if (!token || !token.token) return res.json({ error: 'Impossible de générer le token' })
     let userInfos = await getInfos(token.token)
     if (!userInfos) return res.json({ error: 'Impossible de récupérer les informations' })
     console.log('Token généré')
@@ -160,10 +160,32 @@ app.post('/login', async (req, res) => {
     res.json({ token: jwt.sign(token, process.env.JSON_WEB_TOKEN), userInfos: jwt.sign(connectInfos, process.env.JSON_WEB_TOKEN), user: JSON.stringify(user) })
 })
 
-app.post('/getInfos', isTokenValid, async (req, res) => {
-    console.log('getInfos')
-    let token = jwt.verify(req.headers['authorization'], process.env.JSON_WEB_TOKEN)
+app.post('/login/qrcode', async (req, res) => {
+    let { qr_code, verif_code } = req.body
+    let qr_code_json = JSON.parse(qr_code)
+    if (!qr_code || !verif_code) return res.json({ error: 'Arguments manquants' })
+    let token = await generateTokenQrCode(qr_code, verif_code)
+    console.log('token', token)
+    if (!token) return res.json({ error: 'Impossible de générer le token' })
+    let userInfos = await getInfos(token)
+    if (!userInfos) return res.json({ error: 'Impossible de récupérer les informations' })
+    let user = await createUser(userInfos.name, userInfos.class, userInfos.etab, userInfos.pp, userInfos.role)
+    if (!user || user.error) return res.json(user.error || { error: 'Impossible de créer l\'utilisateur' })
+    console.log(userInfos.name)
+    let connectInfos = {
+        qr_url: qr_code_json.url || null,
+        name: userInfos.name,
+        qr_login: qr_code_json.login,
+        qr_token: qr_code_json.jeton,
+    }
+    res.json({ token: jwt.sign(token, process.env.JSON_WEB_TOKEN), userInfos: jwt.sign(connectInfos, process.env.JSON_WEB_TOKEN), user: JSON.stringify(user) })
+})
+
+app.post('/getInfos', async (req, res) => {
+    console.log('getInfos', req.headers)
+    let token = jwt.verify(req.headers['authorization'].split(' ')[1], process.env.JSON_WEB_TOKEN)
     if (!token || !token.token) return res.json({ error: 'Token invalide' })
+    console.log(token)
     let infos = await getInfos(token.token)
     if (!infos) return res.json({ error: 'Impossible de récupérer les informations' })
     res.json(infos)

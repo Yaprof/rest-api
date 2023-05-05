@@ -27,6 +27,28 @@ exports.generateToken = async function generateToken(url, username, password, et
     return response.data.token
 }
 
+exports.generateTokenQrCode = async function generateTokenQrCode(qr_code, verif_code) {
+    console.log('generateTokenQrCode', qr_code, verif_code)
+    qr_code = JSON.parse(qr_code)
+    if (!qr_code || !qr_code.jeton || !qr_code.login || !qr_code.url) return { error: "QR Code invalide" }
+
+    let response = await axios.post(process.env.PRONOTE_API + '/generatetoken', {
+        method: "qrcode",
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+        },
+        body: {
+            url: qr_code.url,
+            qrToken: qr_code.jeton,
+            login: qr_code.login,
+            checkCode: verif_code
+        }
+    }).catch(error => { console.log('error generateTokenQrCode', error); return { error: "Impossible de générer le token" } })
+    if (!response.data) return { error: "Impossible de générer le token" }
+    return response.data.token
+}
+
 exports.getInfos = async function getInfos(token) {
     console.log('getInfos', token)
     let response = await axios.get(process.env.PRONOTE_API + "/user?token="+token, {
