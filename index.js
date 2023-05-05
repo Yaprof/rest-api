@@ -15,6 +15,7 @@ const { generateToken, getInfos, getRecipients, getEntUrl, generateTokenQrCode }
 const { getAllBadges, buyBadge, updatebadges } = require('./functions/badges')
 const { getSubscription, registerSubscription } = require('./functions/notifications')
 const { getMenu, updateMenu } = require('./functions/cantine')
+const { addCoin } = require('./functions/economy')
 
 const isTokenValid = require('./middleware/tokenValid').default
 const isAdmin = require('./middleware/isAdmin').default
@@ -318,6 +319,9 @@ app.post('/cantine/menu', [rateLimit, isToken, upload.single('file')], async (re
     if (!user) return res.json({ error: 'User invalide' })
     let menu = await updateMenu(req?.file, user)
     if (!menu) return res.json({ error: 'Impossible de mettre à jour le menu' })
+    user = await getUserByName(user.name)
+    if (!user) return res.json({ error: 'Impossible de récupérer l\'utilisateur' })
+    await addCoin(user, 10)
     res.json(menu)
 })
 
