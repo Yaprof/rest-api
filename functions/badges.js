@@ -9,7 +9,6 @@ exports.getAllBadges = async function getAllBadges() {
 }
 
 exports.buyBadge = async function buyBadge(user, id) {
-    console.log('buying badge')
     if (!id || !user) return { error: 'Arguments manquants' }
     user = await getUserByName(user.name)
     if (!user) return { error: 'User not found' }
@@ -18,7 +17,6 @@ exports.buyBadge = async function buyBadge(user, id) {
     if (user.profile.badges.find(b => b == id)) return { error: 'Badge déjà acheté' }
     if (parseInt(user.profile.coins) < parseInt(badge.price)) return { error: 'Pas assez de coins' }
     user.profile.badges.push(badge.id)
-    console.log(user.profile.badges)
     user = await prisma.profile.update({
         where: { userId: parseInt(user.id) },
         data: {
@@ -29,8 +27,6 @@ exports.buyBadge = async function buyBadge(user, id) {
         console.log(e)
         return { error: 'Impossible d\'acheter le badge' }
     })
-    /* await removeCoin(user, badge.price) */
-    console.log(user)
     if (!user) return { error: 'User not found' }
     return badge
 },
@@ -47,7 +43,6 @@ exports.updatebadges = async function updatebadges(user, new_badges) {
         console.log(e)
         return { error: 'Impossible de mettre à jour les badges' }
     })
-    console.log(user)
     if (!user) return { error: 'User not found' }
     return user
 }

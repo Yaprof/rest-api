@@ -1,18 +1,22 @@
 const express = require('express')
 const { PrismaClient } = require('@prisma/client')
 var bodyParser = require('body-parser')
-var cors = require('cors')
+const cors = require('cors')
 const moment = require('moment')
 const jwt = require('jsonwebtoken');
 const dotenv = require('dotenv');
+const webpush = require('web-push');
 
-const { getUser, createUser, getUserFeed, updateUser, getUserByName, getUsers } = require('./functions/user')
+const { getUser, createUser, getUserFeed, updateUser, getUserByName, getUsers, changeUserBan } = require('./functions/user')
 const { getPost, createPost, deletePost, likePost, dislikePost } = require('./functions/post')
 const { generateToken, getInfos, getRecipients, getEntUrl, generateTokenQrCode } = require('./functions/auth')
 const { getAllBadges, buyBadge, updatebadges } = require('./functions/badges')
+const { getSubscription, registerSubscription } = require('./functions/notifications')
 
 const isTokenValid = require('./middleware/tokenValid').default
 const isAdmin = require('./middleware/isAdmin').default
+const isToken = require('./middleware/isToken').default
+const rateLimit = require('./middleware/rateLimit').default
 
 const cloudinary = require('cloudinary').v2;
 
@@ -23,31 +27,38 @@ cloudinary.config({
   api_secret: "gTftni7_kDNTj2i8gzU9wNtQRO4"
 });
 
+webpush.setVapidDetails(
+    'mailto:yaprof.app@gmail.com',
+    process.env.VAPID_PUBLIC_KEY,
+    process.env.VAPID_PRIVATE_KEY
+);
+
 moment.locale('fr')
 dotenv.config();
 
 const prisma = new PrismaClient()
 const app = express()
 
-var jsonParser = bodyParser.json({ limit: '50mb', type: 'application/json', extended: true  })
-var urlencodedParser = bodyParser.urlencoded({ limit: '50mb', extended: true })
+app.use(cors());
+app.use(bodyParser.json({ limit: '50mb' }))
+app.use(express.urlencoded({ limit: '50mb' }))
 
-app.use(cors({ origin: true, credentials: true }));
-app.use(express.json({limit: '50mb'}))
-app.use(express.urlencoded({limit: '50mb'}))
+////////// POST //////////
 
-app.get('/feed/:userId', isTokenValid, async (req, res) => {
-    console.log(req.body)
+app.get('/feed/:userId', [rateLimit, isToken], async (req, res) => {
+    console.log("⏰ \x1b[90m"+moment(new Date).format('DD/MM/YYYY HH:mm:ss')+'\x1b[0m \x1b[43m[GET]\x1b[0m', '\x1b[34m/feed/:userId\x1b[0m => ' + req.headers['x-forwarded-for']?.split(',')[0])
     if (!req.params.userId) return res.json({ error: 'Arguments manquants' })
-    let user = await getUser(req.body.userId)
+    let JWTUser = jwt.verify(req.query.userInfos, process.env.JSON_WEB_TOKEN)
+    if (!JWTUser) return res.json({ error: 'User introuvable' })
+    let user = await getUserByName(JWTUser.name)
     if (!user) return res.json({ error: 'User introuvable' })
     let posts = await getUserFeed(user, req.params.userId)
     res.json(posts)
 })
 
-app.post('/post', isTokenValid, async (req, res, next) => {
+app.post('/post', [rateLimit, isToken], async (req, res, next) => {
+    console.log("⏰ \x1b[90m"+moment(new Date).format('DD/MM/YYYY HH:mm:ss')+'\x1b[0m \x1b[43m[POST]\x1b[0m', '\x1b[34m/post\x1b[0m => ' + req?.headers['x-forwarded-for']?.split(',')[0])
     let { pointer, content, date } = req.body
-    console.log(pointer, content, date)
     if (!pointer || !content || !date) return res.json({ error: 'Arguments manquants' })
     let user = await getUserByName(jwt.verify(req.query.userInfos, process.env.JSON_WEB_TOKEN).name)
     if (!user) return res.json({ error: 'User introuvable' })
@@ -55,7 +66,8 @@ app.post('/post', isTokenValid, async (req, res, next) => {
     res.json(post)
 })
 
-app.delete('/post/:id', isTokenValid, async (req, res) => {
+app.delete('/post/:id', [rateLimit, isToken], async (req, res) => {
+    console.log("⏰ \x1b[90m"+moment(new Date).format('DD/MM/YYYY HH:mm:ss')+'\x1b[0m \x1b[43m[DELETE]\x1b[0m', '\x1b[34m/post/:id\x1b[0m => ' + req?.headers['x-forwarded-for']?.split(',')[0])
     const { id } = req.params
     if (!id) return res.json({ error: 'Arguments manquants' })
     let user = await getUserByName(jwt.verify(req.query.userInfos, process.env.JSON_WEB_TOKEN).name)
@@ -64,7 +76,8 @@ app.delete('/post/:id', isTokenValid, async (req, res) => {
     res.json(post)
 })
 
-app.post('/post/:id/like', isTokenValid, async (req, res) => {
+app.post('/post/:id/like', [rateLimit, isToken], async (req, res) => {
+    console.log("⏰ \x1b[90m"+moment(new Date).format('DD/MM/YYYY HH:mm:ss')+'\x1b[0m \x1b[43m[POST]\x1b[0m', '\x1b[34m/post/:id/like\x1b[0m => ' + req?.headers['x-forwarded-for']?.split(',')[0])
     if (!req.params.id) return res.json({ error: 'Arguments manquants' })
     let user = await getUserByName(jwt.verify(req.query.userInfos, process.env.JSON_WEB_TOKEN).name)
     if (!user) return res.json({ error: 'User introuvable' })
@@ -72,7 +85,8 @@ app.post('/post/:id/like', isTokenValid, async (req, res) => {
     res.json(post)
 })
 
-app.post('/post/:id/dislike', isTokenValid, async (req, res) => {
+app.post('/post/:id/dislike', [rateLimit, isToken], async (req, res) => {
+    console.log("⏰ \x1b[90m"+moment(new Date).format('DD/MM/YYYY HH:mm:ss')+'\x1b[0m \x1b[43m[POST]\x1b[0m', '\x1b[34m/post/:id/dislike\x1b[0m => ' + req?.headers['x-forwarded-for']?.split(',')[0])
     if (!req.params.id) return res.json({ error: 'Arguments manquants' })
     let user = await getUserByName(jwt.verify(req.query.userInfos, process.env.JSON_WEB_TOKEN).name)
     if (!user) return res.json({ error: 'User introuvable' })
@@ -80,19 +94,34 @@ app.post('/post/:id/dislike', isTokenValid, async (req, res) => {
     res.json(post)
 })
 
-app.post('/user/create', isTokenValid, async (req, res) => {
+////////// USER //////////
+
+app.post('/user/create', [rateLimit, isToken], async (req, res) => {
+    console.log("⏰ \x1b[90m"+moment(new Date).format('DD/MM/YYYY HH:mm:ss')+'\x1b[0m \x1b[43m[POST]\x1b[0m', '\x1b[34m/user/create\x1b[0m => ' + req?.headers['x-forwarded-for']?.split(',')[0])
     if (!req.body.body.name || !req.body.body.class || !req.body.body.etab || !req.body.body.pp) return res.json({ error: 'Arguments manquants' })
     let user = await createUser(req.body.body.name, req.body.body.class, req.body.body.etab, req.body.body.pp, req.body.body.role)
     res.json(user)
 })
 
-app.post('/user/update', isTokenValid, async (req, res) => {
+app.post('/user/update', [rateLimit, isToken], async (req, res) => {
+    console.log("⏰ \x1b[90m"+moment(new Date).format('DD/MM/YYYY HH:mm:ss')+'\x1b[0m \x1b[43m[POST]\x1b[0m', '\x1b[34m/user/update\x1b[0m => ' + req?.headers['x-forwarded-for']?.split(',')[0])
     let userName = await getUserByName(jwt.verify(req.query.userInfos, process.env.JSON_WEB_TOKEN).name)
     let user = await updateUser(userName, userName.id, req.body.body.name, req.body.body.pp, req.body.body.class, req.body.body.etab, req.body.body.role)
     res.json(user)
 })
 
-app.get('/user', isTokenValid, async (req, res) => {
+app.post('/user/:id/ban', [rateLimit, isToken], async (req, res) => {
+    console.log("⏰ \x1b[90m" + moment(new Date).format('DD/MM/YYYY HH:mm:ss') + '\x1b[0m \x1b[43m[POST]\x1b[0m', '\x1b[34m/user/ban\x1b[0m => ' + req?.headers['x-forwarded-for']?.split(',')[0])
+    if (!req.params.id) return res.json({ error: 'Arguments manquants' })
+    let modo = await getUserByName(jwt.verify(req.query.userInfos, process.env.JSON_WEB_TOKEN).name)
+    if (!modo) return res.json({ error: 'User introuvable' })
+    let user = await changeUserBan(modo, req.params.id, true)
+    if (!user) return res.json({ error: 'Impossible de bannir l\'utilisateur' })
+    res.json(user)
+})
+
+app.get('/user', [rateLimit, isToken], async (req, res) => {
+    console.log("⏰ \x1b[90m"+moment(new Date).format('DD/MM/YYYY HH:mm:ss')+'\x1b[0m \x1b[43m[GET]\x1b[0m', '\x1b[34m/user\x1b[0m => ' + req?.headers['x-forwarded-for']?.split(',')[0])
     if (!req.query?.userInfos) return res.json({ error: 'Userinfos invalide' })
     let userbyName = await getUserByName(jwt.verify(req.query.userInfos, process.env.JSON_WEB_TOKEN).name)
     if (!userbyName) return res.json({ error: 'User introuvable' })
@@ -100,28 +129,29 @@ app.get('/user', isTokenValid, async (req, res) => {
     res.json({...user, token: req.headers['authorization']})
 })
 
-app.get('/user/:id', isTokenValid, async (req, res) => {
+app.get('/user/:id', [rateLimit, isToken], async (req, res) => {
+    console.log("⏰ \x1b[90m"+moment(new Date).format('DD/MM/YYYY HH:mm:ss')+'\x1b[0m \x1b[43m[GET]\x1b[0m', '\x1b[34m/user/:id\x1b[0m => ' + req?.headers['x-forwarded-for']?.split(',')[0])
     if (!req.params.id) return res.json({ error: 'Arguments invalides' })
     let user = await getUser(req.params.id)
     if (!user) return res.json({ error: 'User introuvable' })
     res.json({...user, token: req.headers['authorization']})
 })
 
-app.delete('/user/:id', isTokenValid, async (req, res) => {
+app.delete('/user/:id', [rateLimit, isToken], async (req, res) => {
+    console.log("⏰ \x1b[90m"+moment(new Date).format('DD/MM/YYYY HH:mm:ss')+'\x1b[0m \x1b[43m[DELETE]\x1b[0m', '\x1b[34m/user/:id\x1b[0m => ' + req?.headers['x-forwarded-for']?.split(',')[0])
     if (!req.params.id || !req.body.user) return res.json({ error: 'Arguments manquants' })
     let user = await deleteUser(req.body.user, req.params.id)
     res.json(user)
 })
 
-app.post('/generatetoken', async (req, res) => {
+app.post('/generatetoken', [rateLimit], async (req, res) => {
+    console.log("⏰ \x1b[90m"+moment(new Date).format('DD/MM/YYYY HH:mm:ss')+'\x1b[0m \x1b[43m[POST]\x1b[0m', '\x1b[34m/generatetoken\x1b[0m => ' + req?.headers['x-forwarded-for']?.split(',')[0])
     let { url, username, password, ent } = req.body
-    console.log(url, username, password, ent)
     if (!url || !username || !password || !ent) return res.json({ error: 'Arguments manquants' })
     let token = await generateToken(url, username, password, ent)
     if (!token || !token.token) return res.json({ error: 'Impossible de générer le token' })
     let userInfos = await getInfos(token.token)
     if (!userInfos) return res.json({ error: 'Impossible de récupérer les informations' })
-    console.log('Token généré')
     let connectInfos = {
         url: url,
         name: userInfos.name,
@@ -129,27 +159,24 @@ app.post('/generatetoken', async (req, res) => {
         password: password,
         ent: ent,
     }
-    res.json({ token: jwt.sign(token.token, process.env.JSON_WEB_TOKEN), userInfos: jwt.sign(connectInfos, process.env.JSON_WEB_TOKEN) })
+    res.json({ token: jwt.sign({token: token}, process.env.JSON_WEB_TOKEN), userInfos: jwt.sign(connectInfos, process.env.JSON_WEB_TOKEN) })
 })
 
-app.post('/login', async (req, res) => {
+app.post('/login', [rateLimit], async (req, res) => {
+    console.log("⏰ \x1b[90m"+moment(new Date).format('DD/MM/YYYY HH:mm:ss')+'\x1b[0m \x1b[43m[POST]\x1b[0m', '\x1b[34m/login\x1b[0m => ' + req?.headers['x-forwarded-for']?.split(',')[0])
     let { username, password, ent_url } = req.body
     if (!username || !password || !ent_url) return res.json({ error: 'Arguments manquants' })
     let geturl = await getEntUrl(ent_url)
     if (geturl.error) return res.json(geturl)
     let url = geturl.url
     ent = geturl.ent
-    console.log(url, username, password, ent)
     if (!ent) return res.json({ error: 'Impossible de récupérer l\'url de l\'ENT' })
     let token = await generateToken(url, username, password, ent)
     if (!token) return res.json({ error: 'Impossible de générer le token' })
-    console.log('login token', token)
     let userInfos = await getInfos(token)
     if (!userInfos) return res.json({ error: 'Impossible de récupérer les informations' })
     let user = await createUser(userInfos.name, userInfos.class, userInfos.etab, userInfos.pp, userInfos.role)
-    console.log(user)
     if (!user || user.error) return res.json(user.error || { error: 'Impossible de créer l\'utilisateur' })
-    console.log(userInfos.name)
     let connectInfos = {
         url: url,
         name: userInfos.name,
@@ -157,33 +184,14 @@ app.post('/login', async (req, res) => {
         password: password,
         ent: ent,
     }
-    res.json({ token: jwt.sign(token, process.env.JSON_WEB_TOKEN), userInfos: jwt.sign(connectInfos, process.env.JSON_WEB_TOKEN), user: JSON.stringify(user) })
+    res.json({ token: jwt.sign({token: token}, process.env.JSON_WEB_TOKEN), userInfos: jwt.sign(connectInfos, process.env.JSON_WEB_TOKEN), user: JSON.stringify(user) })
 })
 
-app.post('/login/qrcode', async (req, res) => {
-    let { qr_code, verif_code } = req.body
-    let qr_code_json = JSON.parse(qr_code)
-    if (!qr_code || !verif_code) return res.json({ error: 'Arguments manquants' })
-    let token = await generateTokenQrCode(qr_code, verif_code)
-    console.log('token', token)
-    if (!token) return res.json({ error: 'Impossible de générer le token' })
-    let userInfos = await getInfos(token)
-    if (!userInfos) return res.json({ error: 'Impossible de récupérer les informations' })
-    let user = await createUser(userInfos.name, userInfos.class, userInfos.etab, userInfos.pp, userInfos.role)
-    if (!user || user.error) return res.json(user.error || { error: 'Impossible de créer l\'utilisateur' })
-    console.log(userInfos.name)
-    let connectInfos = {
-        qr_url: qr_code_json.url || null,
-        name: userInfos.name,
-        qr_login: qr_code_json.login,
-        qr_token: qr_code_json.jeton,
-    }
-    res.json({ token: jwt.sign(token, process.env.JSON_WEB_TOKEN), userInfos: jwt.sign(connectInfos, process.env.JSON_WEB_TOKEN), user: JSON.stringify(user) })
-})
+////////// PRONOTE //////////
 
-app.post('/getInfos', async (req, res) => {
-    console.log('getInfos', req.headers)
-    let token = jwt.verify(req.headers['authorization'].split(' ')[1], process.env.JSON_WEB_TOKEN)
+app.post('/getInfos', [rateLimit, isTokenValid], async (req, res) => {
+    console.log("⏰ \x1b[90m"+moment(new Date).format('DD/MM/YYYY HH:mm:ss')+'\x1b[0m \x1b[43m[POST]\x1b[0m', '\x1b[34m/getInfos\x1b[0m => ' + req?.headers['x-forwarded-for']?.split(',')[0])
+    let token = jwt.verify(req.headers['authorization'], process.env.JSON_WEB_TOKEN)
     if (!token || !token.token) return res.json({ error: 'Token invalide' })
     console.log(token)
     let infos = await getInfos(token.token)
@@ -191,7 +199,8 @@ app.post('/getInfos', async (req, res) => {
     res.json(infos)
 })
 
-app.get('/recipients', isTokenValid, async (req, res) => {
+app.get('/recipients', [rateLimit, isTokenValid], async (req, res) => {
+    console.log("⏰ \x1b[90m" + moment(new Date).format('DD/MM/YYYY HH:mm:ss') + '\x1b[0m \x1b[43m[GET]\x1b[0m', '\x1b[34m/recipients\x1b[0m => ' + req?.headers['x-forwarded-for']?.split(',')[0])
     let token = jwt.verify(req.headers['authorization'], process.env.JSON_WEB_TOKEN)
     if (!token || !token.token) return res.json({ error: 'Token invalide' })
     let recipients = await getRecipients(token.token)
@@ -199,13 +208,20 @@ app.get('/recipients', isTokenValid, async (req, res) => {
     res.json({ profs: recipients, token: req.body?.token, userInfos: req.body?.userInfos })
 })
 
-app.get('/admin/users', isAdmin, async (req, res) => {
+////////// ADMIN //////////
+
+app.get('/admin/users', [rateLimit, isAdmin], async (req, res) => {
+    console.log("⏰ \x1b[90m"+moment(new Date).format('DD/MM/YYYY HH:mm:ss')+'\x1b[0m \x1b[43m[GET]\x1b[0m', '\x1b[34m/admin/users\x1b[0m => ' + req?.headers['x-forwarded-for']?.split(',')[0])
     let users = await getUsers()
     if (!users) return res.json({ error: 'Impossible de récupérer les utilisateurs' })
     res.json(users)
 })
 
-app.get('/badges', isTokenValid, async (req, res) => {
+
+////////// BADGES //////////
+
+app.get('/badges', [rateLimit, isToken], async (req, res) => {
+    console.log("⏰ \x1b[90m"+moment(new Date).format('DD/MM/YYYY HH:mm:ss')+'\x1b[0m \x1b[43m[GET]\x1b[0m', '\x1b[34m/badges\x1b[0m => ' + req?.headers['x-forwarded-for']?.split(',')[0])
     let token = jwt.verify(req.headers['authorization'], process.env.JSON_WEB_TOKEN)
     if (!token || !token.token) return res.json({ error: 'Token invalide' })
     let badges = await getAllBadges()
@@ -213,7 +229,8 @@ app.get('/badges', isTokenValid, async (req, res) => {
     res.json(badges)
 })
 
-app.post('/badges/:id', isTokenValid, async (req, res) => {
+app.post('/badges/:id', [rateLimit, isToken], async (req, res) => {
+    console.log("⏰ \x1b[90m"+moment(new Date).format('DD/MM/YYYY HH:mm:ss')+'\x1b[0m \x1b[43m[POST]\x1b[0m', '\x1b[34m/badges/:id\x1b[0m => ' + req?.headers['x-forwarded-for']?.split(',')[0])
     let token = jwt.verify(req.headers['authorization'], process.env.JSON_WEB_TOKEN)
     if (!token || !token.token) return res.json({ error: 'Token invalide' })
     let user = jwt.verify(req.query.userInfos, process.env.JSON_WEB_TOKEN)
@@ -227,7 +244,8 @@ app.post('/badges/:id', isTokenValid, async (req, res) => {
 })
 
 
-app.put('/badge/:id', isTokenValid, async (req, res) => {
+app.put('/badge/:id', [rateLimit, isToken], async (req, res) => {
+    console.log("⏰ \x1b[90m"+moment(new Date).format('DD/MM/YYYY HH:mm:ss')+'\x1b[0m \x1b[43m[PUT]\x1b[0m', '\x1b[34m/badges/:id\x1b[0m => ' + req?.headers['x-forwarded-for']?.split(',')[0])
     let token = jwt.verify(req.headers['authorization'], process.env.JSON_WEB_TOKEN)
     if (!token || !token.token) return res.json({ error: 'Token invalide' })
     let user = jwt.verify(req.query.userInfos, process.env.JSON_WEB_TOKEN)
@@ -235,7 +253,41 @@ app.put('/badge/:id', isTokenValid, async (req, res) => {
     let badge = await buyBadge(user, req.params.id)
     if (!badge) return res.json({ error: 'Impossible de modifier le badge' })
     res.json(badge)
- })
+})
+
+
+////////// NOTIFICATIONS //////////
+
+app.get('/push/key', [rateLimit, isToken], async (req, res) => {
+    console.log("⏰ \x1b[90m"+moment(new Date).format('DD/MM/YYYY HH:mm:ss')+'\x1b[0m \x1b[43m[GET]\x1b[0m', '\x1b[34m/push/key\x1b[0m => ' + req?.headers['x-forwarded-for']?.split(',')[0])
+    let token = jwt.verify(req.headers['authorization'], process.env.JSON_WEB_TOKEN)
+    if (!token || !token.token) return res.json({ error: 'Token invalide' })
+    const vapidPublicKey = process.env.VAPID_PUBLIC_KEY
+    if (!vapidPublicKey) return res.json({ error: 'Impossible de récupérer la clé' })
+    res.json(vapidPublicKey)
+})
+
+app.post('/push/register', [rateLimit, isToken], async (req, res) => {
+    console.log("⏰ \x1b[90m"+moment(new Date).format('DD/MM/YYYY HH:mm:ss')+'\x1b[0m \x1b[43m[POST]\x1b[0m', '\x1b[34m/push/register\x1b[0m => ' + req?.headers['x-forwarded-for']?.split(',')[0])
+    let token = jwt.verify(req.headers['authorization'], process.env.JSON_WEB_TOKEN)
+    if (!token || !token.token || !req.body.body.endpoint) return res.json({ error: 'Token invalide' })
+    let user = jwt.verify(req.query.userInfos, process.env.JSON_WEB_TOKEN)
+    if (!user) return res.json({ error: 'Token invalide' })
+    user = await getUserByName(user.name)
+    if (!user) return res.json({ error: 'Impossible de récupérer l\'utilisateur' })
+    let subscription = req.body.body
+    if (!subscription.endpoint) return res.json({ error: 'Arguments manquants' })
+    let currentSubscription = await getSubscription(subscription)
+    if (currentSubscription) return res.json({ error: 'Vous êtes déjà inscrit aux notifications' })
+    let newSubscription = await registerSubscription(user, subscription)
+    if (!newSubscription) return res.json({ error: '!Impossible de mettre à jour la souscription' })
+    res.json(newSubscription)
+})
+
+app.use((err, req, res, next) => {
+  console.error(err.stack); // Log the error to the console
+  res.status(500).json({ error: 'Internal server error' }); // Send a 500 status code and an error message
+});
 
 
 const server = app.listen(8080)

@@ -45,13 +45,23 @@ model User {
   likes         Post[]
   dislikes      Post[]   @relation("dislikedBy")
   profile       Profile? @relation("profile")
+  isBanned      Boolean  @default(false)
 }
 
 model Prof {
-  id       Int     @id @default(autoincrement())
-  name     String? @unique
-  subject  String?
-  color    String?
-  absences Int     @default(0)
-  posts    Post[]  @relation("pointer")
+  id      Int     @id @default(autoincrement())
+  name    String? @unique
+  subject String?
+  color   String?
+
+  posts Post[] @relation("pointer")
+}
+
+model Notification {
+  id          Int       @id @default(autoincrement())
+  endpoint    String?
+  public_key  String?
+  auth_token  String?   @unique
+  userId      Int?
+  expire_date DateTime?
 }

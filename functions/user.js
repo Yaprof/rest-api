@@ -1,7 +1,9 @@
 const { PrismaClient } = require('@prisma/client')
 const prisma = new PrismaClient()
-
+const moment = require('moment')
 const cloudinary = require('cloudinary').v2;
+const axios = require('axios')
+const Stream = require('stream')
 
 exports.createUser = async function createUser(name, clas, etab, pp, role) {
     if (name === "VARGAS LOPEZ Alexandre") role = 99
@@ -81,7 +83,6 @@ exports.getUser = async function getUser(userId) {
 }
 
 exports.getUserByName = async function getUserByName(name) {
-    console.log(name)
     if (!name) return { error: 'Arguments manquants' }
 
     const user = await prisma.user.findUnique({
@@ -138,13 +139,21 @@ exports.updateUser = async function updateUser(user, userId, name, pp, clas, eta
     if (!userToUpdate) return { error: 'Utilisateur introuvable' }
     if (user.role < 99 && user.id != userToUpdate.id) return { error: 'Vous n\'avez pas la permission de modifier cet utilisateur' }
 
-    let url;
+    if (pp?.buffer) {
+        console.log(userToUpdate.name)
 
-    if (pp) {
-        const res = await cloudinary.uploader.upload(pp, { public_id: name, folder: 'user/icons', overwrite: true, use_filename: true, unique_filename: false })
+        const buffer = new Uint8Array(JSON.parse(pp.buffer)).buffer;
+        const file = Buffer.from(buffer);
+        const options = {
+            resource_type: 'image', public_id: userToUpdate.name, folder: 'user/icons', overwrite: true, use_filename: true, unique_filename: false, format: 'webp',
+        };
+        let res = await cloudinary.uploader.upload_stream(options)
         if (!res) return { error: 'Impossible d\'upload la pp' }
 
-        url = await cloudinary.url(res.secure_url, { width: 100, height: 100, crop: "cover", fetch_format: "auto" })
+        const stream = new Stream.Readable()
+        stream.push(file);
+        stream.push(null);
+        stream.pipe(res);
     }
 
 
@@ -153,7 +162,8 @@ exports.updateUser = async function updateUser(user, userId, name, pp, clas, eta
     if (clas && clas != userToUpdate.class) updateData.class = clas
     if (etab && etab != userToUpdate.establishment) updateData.establishment = etab
     if (role && role != userToUpdate.role) updateData.role = role
-    if (url && url != userToUpdate.profile.pp) updateData.profile = { update: { pp: url } }
+    if (pp?.buffer) updateData.profile = { update: { pp: 'https://res.cloudinary.com/dzg9awmm8/image/upload/v1683235733/user/icons/'+userToUpdate.name.replaceAll(' ', '%20')+'.'+pp.type } }
+    console.log(updateData)
     const updatedUser = await prisma.user.update({
         where: {
             id: parseInt(userId)
@@ -208,18 +218,37 @@ exports.getUserFeed = async function getUserFeed(user, userId) {
         },
     }).catch(e => { console.log(e); return { error: 'Impossible de récupérer le flux' } })
 
- /*    function isDateInThisWeek(date) {
-        const todayObj = new Date();
-        const todayDate = todayObj.getDate();
-        const todayDay = todayObj.getDay();
-
-        const firstDayOfWeek = new Date(todayObj.setDate(todayDate - todayDay));
-        const lastDayOfWeek = new Date(firstDayOfWeek);
-        lastDayOfWeek.setDate(lastDayOfWeek.getDate() + 6);
-
-        return date >= firstDayOfWeek && date <= lastDayOfWeek;
-    }
-    if (type == "weekly") posts = posts.filter(post => isDateInThisWeek(new Date(post.createdAt))) */
+    /*    function isDateInThisWeek(date) {
+           const todayObj = new Date();
+           const todayDate = todayObj.getDate();
+           const todayDay = todayObj.getDay();
+   
+           const firstDayOfWeek = new Date(todayObj.setDate(todayDate - todayDay));
+           const lastDayOfWeek = new Date(firstDayOfWeek);
+           lastDayOfWeek.setDate(lastDayOfWeek.getDate() + 6);
+   
+           return date >= firstDayOfWeek && date <= lastDayOfWeek;
+       }
+       if (type == "weekly") posts = posts.filter(post => isDateInThisWeek(new Date(post.createdAt))) */
 
     return posts
+}
+exports.changeUserBan = async function changeUserBan(user, userId, ban) {
+    if (!userId || !user || isNaN(userId)) return { error: 'Arguments manquants' }
+    const modo = await prisma.user.findUnique({
+        where: {
+            id: parseInt(userId)
+        },
+    }).catch(e => { console.log(e); return { error: 'Impossible de bannir l\'utilisateur' } })
+    if (!modo) return { error: 'Utilisateur introuvable' }
+    if (modo.role < 50) return { error: 'Vous n\'avez pas la permission de bannir cet utilisateur' }
+    const bannedUser = await prisma.user.update({
+        where: {
+            id: parseInt(userId)
+        },
+        data: {
+            isBanned: ban
+        }
+    }).catch(e => { console.log(e); return { error: 'Impossible de bannir l\'utilisateur' } })
+    return bannedUser
 }

@@ -6,7 +6,7 @@ dotenv.config();
 exports.default = async function isTokenValid(req, res, next) {
     let authHeader = req.headers['authorization']
     if (!authHeader) authHeader = req.body.headers?.Authorization
-    const token = authHeader && authHeader.split(' ')[1]
+    const token = authHeader && authHeader?.split(' ')[1]
     if (!token || token == "undefined") return res.status(401).send('Access denied')
     try {
         let verified = jwt.verify(token, process.env.JSON_WEB_TOKEN)
@@ -16,12 +16,10 @@ exports.default = async function isTokenValid(req, res, next) {
         const infos = jwt.verify(userInfos, process.env.JSON_WEB_TOKEN)
         if (!infos) return res.status(400).send('Invalid token')
         let user = await getUserByName(infos.name)
-        if (!user) return res.status(400).send('Invalid token')
-        console.log(user)
+        if (!user) return res.status(400).send('Invalid user')
         if (![50, 99].includes(user.role)) return res.status(403).send('Access denied')
         next()
     } catch (err) {
-        console.log(err)
         res.status(400).send('Invalid token')
     }
 }

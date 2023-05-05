@@ -2,6 +2,7 @@ const { PrismaClient } = require('@prisma/client')
 const prisma = new PrismaClient()
 const moment = require('moment')
 const { addCoin, removeCoin } = require('./economy')
+const webpush = require('web-push');
 
 exports.createPost = async function createPost(user, pointer, content, date) {
     if (!pointer || !content || !user || !date) return { error: 'Arguments manquants' }
@@ -55,6 +56,56 @@ exports.createPost = async function createPost(user, pointer, content, date) {
     }).catch(e => { return { error: "Impossible de créer le post" } })
 
     await addCoin(user, 5)
+
+    let notifications = await prisma.notification.findMany({
+        where: {
+            userId: {
+                notIn: [user.id]
+            }
+        }
+    }).catch(e => {
+        console.log(e)
+        return { error: 'Impossible de trouver les notifications' }
+    })
+
+
+    for (let i = 0; i < notifications.length; i++) {
+        let notifUser = await prisma.user.findUnique({
+            where: {
+                id: notifications[i].userId
+            }
+        }).catch(e => {
+            console.log(e)
+            return { error: 'Impossible de trouver l\'utilisateur' }
+        })
+        notifications = notifications.filter(n => n.establishment != user.establishment || n.userId != notifUser.id || n.endpoint != notifUser.endpoint)
+        const notification = notifications[i];
+        let subscription = {
+            endpoint: notification.endpoint,
+            keys: {
+                auth: notification.auth_token,
+                p256dh: notification.public_key
+            }
+        }
+
+        webpush.sendNotification(subscription, JSON.stringify(
+            {
+                title: 'Nouveau signalement',
+                body: `${user.name} a signalé ${pointer.name} (${content.toLowerCase()}) pour ${date == 'today' ? 'aujourd\'hui' : date == 'tomorrow' ? 'demain' : date == 'next_tomorrow' ? 'après-demain' : date == 'next_next_tomorrow' ? 'dans 3 jours' : 'le ' + moment(date).format('DD/MM/YYYY')}`,
+                icon: '../assets/icon_512x512.png',
+                vibrate: [100, 50, 100],
+                actions: [
+                    {
+                        action: 'explore', title: 'Aller sur l\'app',
+                        icon: '../assets/icon_512x512.png'
+                    },
+                ]
+
+            }
+        )).catch(e => {
+            console.log(e)
+        })
+    }
     return post
 }
 
@@ -96,14 +147,14 @@ exports.likePost = async function likePost(user, id) {
         dislikedBy: { disconnect: { id: parseInt(user.id) } },
     }
     let coinToChange = 1
-    if (post.likedBy.find(u => u.id == user.id)) {
+    if (post.likedBy?.find(u => u.id == user.id)) {
         coinToChange = -1
         data = {
             likedBy: { disconnect: { id: parseInt(user.id) } },
             dislikedBy: { disconnect: { id: parseInt(user.id) } },
         }
     }
-    if (post.dislikedBy.find(u => u.id == user.id)) coinToChange = 0
+    if (post.dislikedBy?.find(u => u.id == user.id)) coinToChange = 0
 
     post = await prisma.post.update({
         where: { id: parseInt(id) },
