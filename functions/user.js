@@ -185,6 +185,7 @@ exports.uploadUserPp = async function uploadUserPp(user, userId, pp) {
             pp: 'https://res.cloudinary.com/dzg9awmm8/image/upload/user/icons/' + userToUpdate.name.replaceAll(' ', '%20') + '.' + pp.mimetype.replace('image/', '')
         },
     }).catch(e => { console.log(e); return { error: 'Impossible de mettre à jour l\'utilisateur' } })
+    console.log(updatedUser)
 
     return updatedUser
 }
