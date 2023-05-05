@@ -177,7 +177,8 @@ exports.updateUser = async function updateUser(user, userId, name, pp, clas, eta
 }
 
 exports.uploadUserPp = async function uploadUserPp(user, userId, pp) {
-    if (!userId || !user || !pp?.buffer) return { error: 'Arguments manquants' }
+    console.log(pp)
+    if (!userId || !user || !pp) return { error: 'Arguments manquants' }
     const userToUpdate = await prisma.user.findUnique({
         where: {
             id: parseInt(userId)
@@ -189,25 +190,19 @@ exports.uploadUserPp = async function uploadUserPp(user, userId, pp) {
     if (!userToUpdate) return { error: 'Utilisateur introuvable' }
     if (user.role < 99 && user.id != userToUpdate.id) return { error: 'Vous n\'avez pas la permission de modifier cet utilisateur' }
 
-    const buffer = new Uint8Array(JSON.parse(pp.buffer)).buffer;
-    const file = Buffer.from(buffer);
     const options = {
         resource_type: 'image', public_id: userToUpdate.name, folder: 'user/icons', overwrite: true, use_filename: true, unique_filename: false, format: 'webp',
     };
-    let res = await cloudinary.uploader.upload_stream(options)
+    let res = await cloudinary.uploader.upload(pp?.path, options)
+    console.log(res)
     if (!res) return { error: 'Impossible d\'upload la pp' }
-
-    const stream = new Stream.Readable()
-    stream.push(file);
-    stream.push(null);
-    stream.pipe(res);
 
     const updatedUser = await prisma.user.update({
         where: {
             id: parseInt(userId)
         },
         data: {
-            profile: { update: { pp: 'https://res.cloudinary.com/dzg9awmm8/image/upload/v1683235733/user/icons/' + userToUpdate.name.replaceAll(' ', '%20') + '.' + pp.type } }
+            profile: { update: { pp: 'https://res.cloudinary.com/dzg9awmm8/image/upload/v1683235733/user/icons/' + userToUpdate.name.replaceAll(' ', '%20') + '.' + pp.mimetype.replace('image/', '') } }
         },
         include: {
             profile: true,

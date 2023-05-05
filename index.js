@@ -9,7 +9,7 @@ const webpush = require('web-push');
 const multer = require('multer');
 const upload = multer({ dest: 'uploads/' });
 
-const { getUser, createUser, getUserFeed, updateUser, getUserByName, getUsers, changeUserBan } = require('./functions/user')
+const { getUser, createUser, getUserFeed, updateUser, getUserByName, getUsers, changeUserBan, uploadUserPp } = require('./functions/user')
 const { getPost, createPost, deletePost, likePost, dislikePost } = require('./functions/post')
 const { generateToken, getInfos, getRecipients, getEntUrl, generateTokenQrCode } = require('./functions/auth')
 const { getAllBadges, buyBadge, updatebadges } = require('./functions/badges')
@@ -117,6 +117,7 @@ app.post('/user/upload', [rateLimit, isToken, upload.single('file')], async (req
     let userName = await getUserByName(jwt.verify(req.query.userInfos, process.env.JSON_WEB_TOKEN).name)
     if (!req?.file) return res.json({ error: 'Arguments manquants' })
     let user = await uploadUserPp(userName, userName.id, req?.file)
+    if (!user) return res.json({ error: 'Impossible de mettre à jour la pp' })
     res.json(user)
 })
 
