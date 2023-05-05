@@ -5,7 +5,7 @@ const rateLimitMap = new Map();
 
 
 exports.default = async function rateLimit(req, res, next) {
-    res.header("Access-Control-Allow-Origin", "https://yaprof.fr");
+    /* res.header("Access-Control-Allow-Origin", "https://yaprof.fr"); */
      // Rate limit system
     const ipAddress = req.ip;
 
