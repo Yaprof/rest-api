@@ -68,7 +68,7 @@ exports.createPost = async function createPost(user, pointer, content, date) {
         return { error: 'Impossible de trouver les notifications' }
     })
 
-
+    notifications = notifications.filter(n => n.userId != user.id)
     for (let i = 0; i < notifications.length; i++) {
         let notifUser = await prisma.user.findUnique({
             where: {
@@ -78,33 +78,45 @@ exports.createPost = async function createPost(user, pointer, content, date) {
             console.log(e)
             return { error: 'Impossible de trouver l\'utilisateur' }
         })
-        notifications = notifications.filter(n => n.establishment != user.establishment || n.userId != notifUser.id || n.endpoint != notifUser.endpoint)
-        const notification = notifications[i];
+        if (!notifUser) return
+        if (notifUser.establishment != user.establishment) return
+
         let subscription = {
-            endpoint: notification.endpoint,
+            endpoint: notifications[i].endpoint,
             keys: {
-                auth: notification.auth_token,
-                p256dh: notification.public_key
+                auth: notifications[i].auth_token,
+                p256dh: notifications[i].public_key
             }
         }
 
-        webpush.sendNotification(subscription, JSON.stringify(
-            {
-                title: 'Nouveau signalement',
-                body: `${user.name} a signalé ${pointer.name} (${content.toLowerCase()}) pour ${date == 'today' ? 'aujourd\'hui' : date == 'tomorrow' ? 'demain' : date == 'next_tomorrow' ? 'après-demain' : date == 'next_next_tomorrow' ? 'dans 3 jours' : 'le ' + moment(date).format('DD/MM/YYYY')}`,
-                icon: '../assets/icon_512x512.png',
-                vibrate: [100, 50, 100],
-                actions: [
-                    {
-                        action: 'explore', title: 'Aller sur l\'app',
-                        icon: '../assets/icon_512x512.png'
-                    },
-                ]
+        try {
+            await webpush.sendNotification(subscription, JSON.stringify(
+                {
+                    title: 'Nouveau signalement',
+                    body: `${user.name} a signalé ${pointer.name} (${content.toLowerCase()}) pour ${date == 'today' ? 'aujourd\'hui' : date == 'tomorrow' ? 'demain' : date == 'next_tomorrow' ? 'après-demain' : date == 'next_next_tomorrow' ? 'dans 3 jours' : 'le ' + moment(date).format('DD/MM/YYYY')}`,
+                    icon: '../assets/icon_512x512.png',
+                    vibrate: [100, 50, 100],
+                    actions: [
+                        {
+                            action: 'explore', title: 'Aller sur l\'app',
+                            icon: '../assets/icon_512x512.png'
+                        },
+                    ]
 
-            }
-        )).catch(e => {
+                }
+            ))
+        }
+        catch (e) {
             console.log(e)
-        })
+            await prisma.notification.delete({
+                where: {
+                    id: notifications[i].id
+                }
+            }).catch(e => {
+                console.log(e)
+                return { error: 'Impossible de supprimer la notification' }
+            })
+        }
     }
     return post
 }
