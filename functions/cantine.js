@@ -15,6 +15,7 @@ exports.getMenu = async function getMenu(user) {
 }
 
 function getWeek(date) {
+    date = new Date(date);
     const janFirst = new Date(date.getFullYear(), 0, 1);
     return Math.ceil((((date.getTime() - janFirst.getTime()) / 86400000) + janFirst.getDay() + 1) / 7);
 }
@@ -54,7 +55,8 @@ exports.updateMenu = async function updateMenu(menu, user) {
         menuCantine = await prisma.cantine.create({
             data: {
                 url: res?.secure_url,
-                establishment: user.establishment
+                establishment: user.establishment,
+                userId: user.id
             },
         }).catch(e => {
             console.log(e)
