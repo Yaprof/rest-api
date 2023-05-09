@@ -10,6 +10,8 @@ exports.createPost = async function createPost(user, pointer, content, date) {
     if (![50, 99].includes(user.role) && user.posts.filter(post => (new Date(post.createdAt).getFullYear()+'-'+new Date(post.createdAt).getDate()+'-'+(new Date(post.createdAt).getMonth()+1)) == (new Date().getFullYear()+'-'+new Date().getDate()+'-'+(new Date().getMonth()+1))).length > 4) return { error: "Vous avez déjà posté 5 messages aujourd'hui"}
 
     let colors = ['#FF2D00', '#FF9500', '#FFCC00', '#4CD964', '#5AC8FA', '#007AFF', '#5856D6', '#FF2D55', '#8E8E93']
+    
+    console.log(date)
     if (date == 'today') date = moment()
     if (date == 'tomorrow') date = moment().add(1, 'days');
     if (date == 'next_tomorrow') date = moment().add(2, 'days');
@@ -32,14 +34,14 @@ exports.createPost = async function createPost(user, pointer, content, date) {
     }
 
     if (!['Autre', 'Grève', 'Maladie', 'Réunion', 'Sortie pédagogique'].includes(content)) return { error: 'Raison invalide' }
-
+    console.log(date)
     const post = await prisma.post.create({
         data: {
             content: content,
             published: true,
             author: { connect: { id: parseInt(user.id) } },
             establishment: user.establishment,
-            createdAt: date instanceof Date ? date.toISOString() : new Date().toISOString(),
+            createdAt: moment.isMoment(date) ? date.toISOString() : new Date().toISOString(),
             pointer: {
                 connectOrCreate: {
                     where: {
