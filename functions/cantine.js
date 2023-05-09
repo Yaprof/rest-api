@@ -45,7 +45,8 @@ exports.updateMenu = async function updateMenu(menu, user) {
         menuCantine = await prisma.cantine.update({
             where: { establishment: user.establishment },
             data: {
-                url: res?.secure_url
+                url: res?.secure_url,
+                userId: user.id
             },
         }).catch(e => {
             console.log(e)
