@@ -92,7 +92,7 @@ exports.createPost = async function createPost(user, pointer, content, date) {
         }
 
         try {
-            await webpush.sendNotification(subscription, JSON.stringify(
+            webpush.sendNotification(subscription, JSON.stringify(
                 {
                     title: 'Nouveau signalement',
                     body: `${user.name} a signalé ${pointer.name} (${content.toLowerCase()}) pour ${date == 'today' ? 'aujourd\'hui' : date == 'tomorrow' ? 'demain' : date == 'next_tomorrow' ? 'après-demain' : date == 'next_next_tomorrow' ? 'dans 3 jours' : 'le ' + moment(date).format('DD/MM/YYYY')}`,

@@ -293,7 +293,7 @@ app.post('/push/register', [rateLimit, isToken], async (req, res) => {
     let currentSubscription = await getSubscription(subscription)
     if (currentSubscription) return res.json({ error: 'Vous êtes déjà inscrit aux notifications' })
     let newSubscription = await registerSubscription(user, subscription)
-    if (!newSubscription) return res.json({ error: '!Impossible de mettre à jour la souscription' })
+    if (!newSubscription) return res.json({ error: 'Impossible de mettre à jour la souscription' })
     res.json(newSubscription)
 })
 
