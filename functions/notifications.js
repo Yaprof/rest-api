@@ -21,23 +21,28 @@ exports.registerSubscription = async function registerSubscription(user, subscri
         return { error: 'Impossible de d\'abonner aux notifs' }
     })
     if (!notification) return { error: 'Impossible de d\'abonner aux notifs' }
-    webpush.sendNotification(subscription, JSON.stringify(
-        {
-            title: 'Abonnement aux notifications',
-            body: 'Vous êtes maintenant abonné aux notifications 🎉',
-            icon: '../assets/icon_512x512.png',
-            vibrate: [100, 50, 100],
-            actions: [
-                {
-                    action: 'explore', title: 'Aller sur l\'app',
-                    icon: '../assets/icon_512x512.png'
-                },
-            ]
+    try {
+        webpush.sendNotification(subscription, JSON.stringify(
+            {
+                title: 'Abonnement aux notifications',
+                body: 'Vous êtes maintenant abonné aux notifications 🎉',
+                icon: '../assets/icon_512x512.png',
+                vibrate: [100, 50, 100],
+                actions: [
+                    {
+                        action: 'explore', title: 'Aller sur l\'app',
+                        icon: '../assets/icon_512x512.png'
+                    },
+                ]
 
-        }
-    )).catch(e => {
+            }
+        )).catch(e => {
+            return console.log(e)
+        })
+    } catch (e) {
         console.log(e)
-    })
+        return { error: 'Impossible d\'envoyer la notification' }
+    }
     return notification
 }
 
