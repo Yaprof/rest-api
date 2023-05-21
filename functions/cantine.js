@@ -25,7 +25,7 @@ function isSameWeek(dateA, dateB) {
 
 exports.updateMenu = async function updateMenu(menu, user) {
     if (!user || !menu) return { error: 'Arguments manquants' }
-    user = await getUserByName(user.name).catch(e => { console.log(e); return { error: 'Impossible de trouver le user' } })
+    user = await getUserByName(user.name)
     if (!user) return { error: 'User not found' }
     console.log(user.establishment, menu.path)
     const options = {
